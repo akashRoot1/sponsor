@@ -12,11 +12,11 @@ from models import JobResult, SearchReport
 
 SUBJECT = "Daily Sponsor-Friendly QA/SDET Job Links - Ireland"
 CATEGORY_ORDER = [
-    "QA / SDET / Test Automation roles",
-    "Production/Application Support roles relevant to QA profile",
+    "Best matches - apply first",
+    "Production/Application Support roles",
     "Performance / API Testing roles",
     "Validation / CSV roles",
-    "Other relevant Quality/Test roles",
+    "Maybe relevant - review manually",
 ]
 
 
@@ -40,6 +40,12 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
     if report.failures:
         lines.extend(["", "Search completed with failures, so results may be incomplete."])
 
+    apply_first = [job for job in jobs if job.category == "Best matches - apply first"]
+    if apply_first:
+        lines.extend(["", "Apply First:"])
+        for index, job in enumerate(apply_first[:10], start=1):
+            lines.append(f"{index}. {job.title} - {job.company} - {job.location} - {job.work_type or 'Not listed'} - {job.url}")
+
     if jobs:
         for category, category_jobs in _group_by_category(jobs).items():
             lines.extend(["", category])
@@ -50,8 +56,12 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
                         f"  Company: {job.company}",
                         f"  Location: {job.location}",
                         f"  Work type: {job.work_type or 'Not listed'}",
+                        f"  Score: {job.score}",
                         f"  Matching keyword: {job.matching_keyword}",
                         f"  Source: {job.source}",
+                        f"  Source type: {job.source_type}",
+                        f"  Source quality: {job.source_quality}",
+                        f"  Reason accepted: {job.accepted_reason}",
                         f"  Date found: {job.date_found}",
                         f"  Link: {job.url}",
                     ]
@@ -71,6 +81,15 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
 
 def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datetime, test_mode: bool) -> str:
     warning = "<p><strong>Search completed with failures, so results may be incomplete.</strong></p>" if report.failures else ""
+    apply_first = [job for job in jobs if job.category == "Best matches - apply first"]
+    apply_first_html = ""
+    if apply_first:
+        apply_first_items = [
+            f"<li><a href=\"{html.escape(job.url)}\">{html.escape(job.title)}</a> - {html.escape(job.company)} - {html.escape(job.location)} - {html.escape(job.work_type or 'Not listed')}</li>"
+            for job in apply_first[:10]
+        ]
+        apply_first_html = f"<h2>Apply First</h2><ol>{''.join(apply_first_items)}</ol>"
+
     if jobs:
         body = []
         for category, category_jobs in _group_by_category(jobs).items():
@@ -83,8 +102,12 @@ def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datet
                       <strong>Company:</strong> {html.escape(job.company)}<br>
                       <strong>Location:</strong> {html.escape(job.location)}<br>
                       <strong>Work type:</strong> {html.escape(job.work_type or 'Not listed')}<br>
+                      <strong>Score:</strong> {job.score}<br>
                       <strong>Matching keyword:</strong> {html.escape(job.matching_keyword)}<br>
                       <strong>Source:</strong> {html.escape(job.source)}<br>
+                      <strong>Source type:</strong> {html.escape(job.source_type)}<br>
+                      <strong>Source quality:</strong> {html.escape(job.source_quality)}<br>
+                      <strong>Reason accepted:</strong> {html.escape(job.accepted_reason)}<br>
                       <strong>Date found:</strong> {html.escape(job.date_found)}
                     </li>
                     """
@@ -101,6 +124,7 @@ def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datet
         <h1>{'[TEST] ' if test_mode else ''}Daily Sponsor-Friendly QA/SDET Job Links - Ireland</h1>
         {_summary_html(jobs, report, generated_at)}
         {warning}
+        {apply_first_html}
         {jobs_html}
         {_failures_html(report)}
         {_rejected_html(report)}
@@ -119,6 +143,7 @@ def _summary_lines(jobs: list[JobResult], report: SearchReport, generated_at: da
         f"Raw jobs found: {len(report.raw_jobs)}",
         f"Accepted jobs: {len(report.jobs)}",
         f"Rejected jobs: {len(report.rejected_jobs)}",
+        f"Duplicates removed: {len(report.duplicates_removed)}",
         f"Generated: {generated_at.strftime('%Y-%m-%d %H:%M %Z')} Europe/Dublin",
     ]
 
@@ -131,6 +156,7 @@ def _summary_html(jobs: list[JobResult], report: SearchReport, generated_at: dat
         ("Raw jobs found", len(report.raw_jobs)),
         ("Accepted jobs", len(report.jobs)),
         ("Rejected jobs", len(report.rejected_jobs)),
+        ("Duplicates removed", len(report.duplicates_removed)),
         ("Generated", f"{generated_at.strftime('%Y-%m-%d %H:%M %Z')} Europe/Dublin"),
     ]
     return "<ul>" + "".join(f"<li><strong>{html.escape(str(label))}:</strong> {html.escape(str(value))}</li>" for label, value in rows) + "</ul>"

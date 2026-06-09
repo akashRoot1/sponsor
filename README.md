@@ -65,6 +65,8 @@ To test Cubic specifically, run with:
 
 Cubic is first in the priority list.
 
+To test one non-priority company, set `test_mode=false`, `send_email=false`, `update_seen=false`, and set `max_companies` to the number of companies from the top of `src/companies.py` that you want to include.
+
 ## Email Setup
 
 Add these GitHub Actions secrets:
@@ -90,14 +92,27 @@ Every run uploads `job-search-debug-results` with:
 | --- | --- |
 | `data/raw_results.json` | Raw public jobs collected before filtering |
 | `data/filtered_results.json` | Accepted matching jobs |
+| `data/accepted_results.json` | Accepted jobs with stable IDs, scores, source type, source quality, and acceptance reason |
 | `data/rejected_results.json` | Rejected jobs with reason, matched keyword, source, URL, and snippet |
 | `data/search_failures.json` | Failed sources with source type, endpoint, error, and HTTP status |
+| `data/duplicates_removed.json` | Accepted-looking duplicate jobs removed before email |
+| `data/source_health.json` | Per-company source health, raw counts, accepted counts, rejected counts, and failures |
 
 Use these artifacts to inspect why a role was accepted or rejected.
 
 ## Filtering
 
-A job is accepted when it has relevant QA/testing/support/validation language and a relevant Ireland/remote/hybrid location signal.
+A job is accepted only when it has a score of `10` or more, a relevant Ireland/remote/hybrid location signal, and is not in an excluded role family.
+
+Scoring:
+
+- Strong keyword in title: `+10`
+- Strong keyword in description: `+5`
+- Weak keyword in title: `+3`
+- Weak keyword in description only: `+1`
+- Ireland/Dublin/Cork/Galway/Limerick/Waterford/Remote Ireland location: `+5`
+
+Weak words such as `quality`, `release`, `incident`, `validation`, `support`, `customer success`, `technical account manager`, and `product enablement` do not pass by themselves. They need strong QA/testing/support context.
 
 Accepted role families include:
 
@@ -110,6 +125,18 @@ Accepted role families include:
 - Validation Engineer, Computer System Validation, CSV roles
 
 Clearly unrelated sales, marketing, HR, finance, legal, warehouse, chef, nurse, driver, accountant, product manager, and business development roles are rejected. Pure frontend/backend developer roles are rejected unless the title itself shows testing, QA, support, or validation relevance.
+
+Strong keywords, weak keywords, context words, and exclusions live in `src/filters.py`. Adjust `STRONG_KEYWORDS`, `WEAK_KEYWORDS`, `CONTEXT_KEYWORDS`, and `EXCLUDED_BUSINESS_TERMS` when tuning results.
+
+## Inspect Rejections And Failures
+
+Open the GitHub Actions artifact files:
+
+- `data/rejected_results.json` for rejected titles, score, reason, matched keyword, source type, source quality, URL, and snippet.
+- `data/search_failures.json` for failed source endpoint, error message, and HTTP status.
+- `data/source_health.json` for per-source raw/accepted/rejected counts.
+
+Common rejection reasons include `weak_description_only_keyword`, `generic_quality_role_not_software_testing`, `customer_success_not_support_engineering`, `technical_account_manager_not_qa`, `manager_business_role`, `security_role_not_qa`, `network_cabling_quality_role`, `location_mismatch`, `pure_developer_without_testing_support`, `excluded_sales_marketing_finance_hr_legal`, and `keyword_mismatch`.
 
 ## Duplicate Prevention
 
@@ -161,7 +188,7 @@ Supported source types are implemented in `src/sources.py`.
 
 Edit `src/filters.py`.
 
-Use `ROLE_KEYWORDS`, `GENERAL_RELEVANT_TERMS`, `IRELAND_LOCATION_TERMS`, and `EXCLUDED_TERMS`.
+Use `STRONG_KEYWORDS`, `WEAK_KEYWORDS`, `CONTEXT_KEYWORDS`, `IRELAND_LOCATION_TERMS`, and `EXCLUDED_BUSINESS_TERMS`.
 
 ## Local Test
 
@@ -188,4 +215,3 @@ python src/main.py
 - Workday endpoints differ by tenant and can change.
 - Search fallback is intentionally low priority and filters out generic search results.
 - If many sources fail, the email warns: `Search completed with failures, so results may be incomplete.`
-

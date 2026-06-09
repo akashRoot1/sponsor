@@ -7,11 +7,14 @@ from zoneinfo import ZoneInfo
 from companies import COMPANIES, TEST_MODE_COMPANIES
 from config import (
     DUBLIN_TIMEZONE,
+    ACCEPTED_RESULTS_PATH,
+    DUPLICATES_REMOVED_PATH,
     FILTERED_RESULTS_PATH,
     RAW_RESULTS_PATH,
     REJECTED_RESULTS_PATH,
     SEARCH_FAILURES_PATH,
     SEEN_JOBS_PATH,
+    SOURCE_HEALTH_PATH,
     force_run_enabled,
     get_email_config,
     max_companies,
@@ -58,11 +61,14 @@ def main() -> None:
     new_jobs = [job for job in all_jobs if job.unique_id not in seen_ids]
     duplicate_jobs = [job for job in all_jobs if job.unique_id in seen_ids]
 
-    raw_results, filtered_results, rejected_results, search_failures = report.artifacts()
+    raw_results, filtered_results, rejected_results, search_failures, accepted_results, duplicates_removed, source_health = report.artifacts()
     save_json(RAW_RESULTS_PATH, raw_results)
     save_json(FILTERED_RESULTS_PATH, filtered_results)
     save_json(REJECTED_RESULTS_PATH, rejected_results)
     save_json(SEARCH_FAILURES_PATH, search_failures)
+    save_json(ACCEPTED_RESULTS_PATH, accepted_results)
+    save_json(DUPLICATES_REMOVED_PATH, duplicates_removed)
+    save_json(SOURCE_HEALTH_PATH, source_health)
 
     LOGGER.info(
         "Search totals successful_companies=%s failed_companies=%s raw=%s accepted=%s rejected=%s new=%s duplicates=%s",
@@ -72,7 +78,7 @@ def main() -> None:
         len(all_jobs),
         len(report.rejected_jobs),
         len(new_jobs),
-        len(duplicate_jobs),
+        len(duplicate_jobs) + len(report.duplicates_removed),
     )
 
     email_sent = False

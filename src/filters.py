@@ -6,64 +6,80 @@ from dataclasses import dataclass
 from models import RawJob
 
 
-ROLE_KEYWORDS = [
-    "qa automation engineer",
+BEST_MATCH_CATEGORY = "Best matches - apply first"
+SUPPORT_CATEGORY = "Production/Application Support roles"
+API_PERFORMANCE_CATEGORY = "Performance / API Testing roles"
+VALIDATION_CATEGORY = "Validation / CSV roles"
+MAYBE_CATEGORY = "Maybe relevant - review manually"
+
+STRONG_KEYWORDS = [
     "qa engineer",
+    "qa automation",
     "quality engineer",
-    "quality assurance",
+    "quality assurance engineer",
+    "software qa",
     "sdet",
     "software development engineer in test",
     "software engineer in test",
     "test engineer",
     "software test engineer",
-    "test analyst",
+    "test automation engineer",
     "automation tester",
-    "test automation",
     "api test engineer",
-    "api testing",
     "performance test engineer",
-    "performance testing",
     "jmeter",
-    "cypress",
-    "playwright",
     "selenium",
+    "playwright",
+    "cypress",
     "postman",
     "rest assured",
-    "ci/cd qa",
-    "release qa",
-    "production support qa",
+    "test support engineer",
     "application support engineer",
     "production support engineer",
-    "test support engineer",
-    "support engineer",
     "technical support engineer",
-    "operations support engineer",
+    "support engineer",
     "l2 support",
     "l3 support",
-    "incident management",
+    "incident management engineer",
     "application analyst",
     "support analyst",
     "validation engineer",
     "computer system validation",
-    "csv tester",
     "csv engineer",
+    "csv tester",
 ]
 
-GENERAL_RELEVANT_TERMS = [
-    "test",
-    "qa",
+WEAK_KEYWORDS = [
     "quality",
+    "release",
+    "incident",
+    "validation",
+    "support",
+    "technical support",
+    "customer success",
+    "technical account manager",
+    "product enablement",
+]
+
+CONTEXT_KEYWORDS = [
+    "qa",
+    "testing",
+    "test",
     "automation",
-    "sdet",
-    "software test",
+    "api support",
     "application support",
     "production support",
-    "support engineer",
-    "technical support",
-    "validation",
+    "incident troubleshooting",
+    "troubleshooting",
+    "software support",
+    "postman",
+    "jmeter",
+    "selenium",
+    "playwright",
+    "cypress",
+    "rest assured",
     "csv",
-    "incident",
-    "release",
+    "computer system validation",
 ]
 
 IRELAND_LOCATION_TERMS = [
@@ -80,52 +96,36 @@ IRELAND_LOCATION_TERMS = [
     "irl",
 ]
 
-REMOTE_TERMS = ["remote", "hybrid"]
-
-EXCLUDED_TERMS = [
+EXCLUDED_BUSINESS_TERMS = [
     "sales",
     "marketing",
-    "hr",
-    "human resources",
     "finance",
     "legal",
+    "hr",
+    "human resources",
     "warehouse",
     "chef",
     "nurse",
     "driver",
     "accountant",
+    "global sanctions",
+    "engagement manager",
     "product manager",
-    "business development",
-]
-
-PURE_DEVELOPER_TERMS = [
-    "backend engineer",
-    "front end engineer",
-    "frontend engineer",
-    "software developer",
-    "software engineer",
-    "full stack engineer",
-]
-
-CATEGORY_KEYWORDS = [
-    ("Production/Application Support roles relevant to QA profile", ["application support", "production support", "test support", "support engineer", "technical support", "operations support", "l2 support", "l3 support", "incident", "application analyst", "support analyst"]),
-    ("Performance / API Testing roles", ["performance", "api testing", "api test", "jmeter", "postman", "rest assured"]),
-    ("QA / SDET / Test Automation roles", ["qa", "sdet", "test automation", "automation tester", "software development engineer in test", "software engineer in test", "software test", "cypress", "playwright", "selenium"]),
-    ("Validation / CSV roles", ["validation", "computer system validation", "csv"]),
-]
-
-IRRELEVANT_TECH_TITLE_TERMS = [
-    "security engineer",
-    "network engineer",
-    "core network engineer",
-    "director of software engineering",
-    "vp of software engineering",
-    "technical project manager",
     "project manager",
-    "product manager",
-    "revenue operations",
+    "program manager",
+    "business development",
     "corporate development",
+    "revenue operations",
+    "gtm product enablement",
+    "product enablement",
 ]
+
+SECURITY_TERMS = ["security engineer", "security engineering manager"]
+NETWORK_CABLING_TERMS = ["cabling quality", "network cabling", "network infrastructure construction", "data center construction"]
+CUSTOMER_SUCCESS_TERMS = ["customer success", "account manager", "technical account manager"]
+GENERIC_QUALITY_TERMS = ["supplier quality engineer", "cabling quality manager", "quality technician", "quality program manager"]
+PURE_DEVELOPER_TERMS = ["backend engineer", "frontend engineer", "front end engineer", "software developer", "full stack engineer"]
+PURE_MANAGER_TERMS = ["manager", "director", "vp ", "svp ", "head of"]
 
 
 @dataclass(frozen=True)
@@ -133,61 +133,90 @@ class FilterDecision:
     accepted: bool
     reason: str
     matched_keyword: str = ""
-    category: str = "Other relevant Quality/Test roles"
+    category: str = MAYBE_CATEGORY
+    score: int = 0
 
 
 def evaluate_job(job: RawJob) -> FilterDecision:
-    title_text = _normalize(job.title)
-    searchable_text = _normalize(" ".join([job.title, job.location, job.work_type, job.category, _strip_negative_phrases(job.snippet)]))
+    title = _normalize(job.title)
+    description = _normalize(_strip_negative_phrases(job.snippet))
+    location = _normalize(job.location)
+    combined = " ".join([title, description, location, _normalize(job.work_type), _normalize(job.category), _normalize(job.url)])
 
-    excluded = _first_match(title_text, EXCLUDED_TERMS)
-    if excluded:
-        return FilterDecision(False, f"excluded_unrelated_role:{excluded}")
+    strong_title = _first_match(title, STRONG_KEYWORDS)
+    strong_description = _first_match(description, STRONG_KEYWORDS)
+    weak_title = _first_match(title, WEAK_KEYWORDS)
+    weak_description = _first_match(description, WEAK_KEYWORDS)
+    context = _first_match(" ".join([title, description]), CONTEXT_KEYWORDS)
+    location_relevant = _location_is_relevant(combined)
 
-    title_keyword = _first_match(title_text, ROLE_KEYWORDS + GENERAL_RELEVANT_TERMS)
-    text_keyword = title_keyword or _first_match(searchable_text, ROLE_KEYWORDS + GENERAL_RELEVANT_TERMS)
+    score = 0
+    if strong_title:
+        score += 10
+    if strong_description:
+        score += 5
+    if weak_title:
+        score += 3
+    if weak_description:
+        score += 1
+    if location_relevant:
+        score += 5
 
-    irrelevant_tech_title = _first_match(title_text, IRRELEVANT_TECH_TITLE_TERMS)
-    if irrelevant_tech_title and not title_keyword:
-        return FilterDecision(False, f"irrelevant_title:{irrelevant_tech_title}")
+    hard_rejection = _hard_rejection_reason(title, description, bool(strong_title), bool(strong_description), bool(context))
+    if hard_rejection:
+        return FilterDecision(False, hard_rejection, strong_title or strong_description or weak_title or weak_description, _category(title, description), score)
 
-    if _first_match(title_text, PURE_DEVELOPER_TERMS) and not title_keyword:
-        return FilterDecision(False, "pure_developer_without_testing_support_relevance")
+    if not location_relevant:
+        return FilterDecision(False, "location_mismatch", strong_title or strong_description or weak_title or weak_description, _category(title, description), score - 20)
 
-    if not text_keyword:
-        return FilterDecision(False, "keyword_mismatch")
+    if weak_description and not (strong_title or strong_description or context):
+        return FilterDecision(False, "weak_description_only_keyword", weak_description, MAYBE_CATEGORY, score)
 
-    if not title_keyword and text_keyword in {"qa", "quality", "automation", "test"}:
-        return FilterDecision(False, "weak_description_only_keyword")
+    matched = strong_title or strong_description or weak_title or weak_description
+    if not matched:
+        return FilterDecision(False, "keyword_mismatch", "", MAYBE_CATEGORY, score)
 
-    if not _location_is_relevant(job):
-        return FilterDecision(False, "location_mismatch")
+    if score < 10:
+        return FilterDecision(False, "weak_description_only_keyword", matched, _category(title, description), score)
 
-    return FilterDecision(True, "accepted", text_keyword, _categorize(title_text, searchable_text))
-
-
-def _location_is_relevant(job: RawJob) -> bool:
-    location_text = _normalize(" ".join([job.location, job.snippet, job.url]))
-    if _first_match(location_text, IRELAND_LOCATION_TERMS):
-        return True
-    if _first_match(_normalize(job.location), REMOTE_TERMS) and _first_match(location_text, IRELAND_LOCATION_TERMS):
-        return True
-    return False
+    return FilterDecision(True, f"score={score}; title-first match", matched, _category(title, description), score)
 
 
-def _categorize(title: str, text: str) -> str:
-    if _first_match(title, ["application support", "production support", "test support", "support engineer", "technical support", "operations support", "l2 support", "l3 support", "incident", "application analyst", "support analyst"]):
-        return "Production/Application Support roles relevant to QA profile"
-    if _first_match(title, ["performance", "api testing", "api test", "jmeter", "postman", "rest assured"]):
-        return "Performance / API Testing roles"
-    if _first_match(title, ["validation", "computer system validation", "csv"]):
-        return "Validation / CSV roles"
-    if _first_match(title, ["qa", "sdet", "test automation", "automation tester", "software development engineer in test", "software engineer in test", "software test", "test engineer", "quality engineer", "cypress", "playwright", "selenium"]):
-        return "QA / SDET / Test Automation roles"
-    for category, terms in CATEGORY_KEYWORDS:
-        if _first_match(text, terms):
-            return category
-    return "Other relevant Quality/Test roles"
+def _hard_rejection_reason(title: str, description: str, strong_title: bool, strong_description: bool, has_context: bool) -> str:
+    if _first_match(title, EXCLUDED_BUSINESS_TERMS):
+        return "excluded_sales_marketing_finance_hr_legal" if _first_match(title, ["sales", "marketing", "finance", "legal", "hr", "human resources", "accountant"]) else "manager_business_role"
+    if _first_match(title, NETWORK_CABLING_TERMS):
+        return "network_cabling_quality_role"
+    if _first_match(title, GENERIC_QUALITY_TERMS) and not has_context:
+        return "generic_quality_role_not_software_testing"
+    if _first_match(title, SECURITY_TERMS) and not (strong_title or strong_description):
+        return "security_role_not_qa"
+    if _first_match(title, CUSTOMER_SUCCESS_TERMS) and not (strong_title or strong_description or _first_match(description, CONTEXT_KEYWORDS)):
+        if "technical account manager" in title:
+            return "technical_account_manager_not_qa"
+        return "customer_success_not_support_engineering"
+    if _first_match(title, PURE_DEVELOPER_TERMS) and not (strong_title or strong_description):
+        return "pure_developer_without_testing_support"
+    if _first_match(title, PURE_MANAGER_TERMS) and not (strong_title or strong_description):
+        return "manager_business_role"
+    return ""
+
+
+def _category(title: str, description: str) -> str:
+    text = " ".join([title, description])
+    if _first_match(title, ["qa automation", "sdet", "software test engineer", "test automation engineer", "qa engineer", "quality assurance engineer", "test support engineer", "test engineer", "automation tester"]):
+        return BEST_MATCH_CATEGORY
+    if _first_match(title, ["application support engineer", "production support engineer", "technical support engineer", "support engineer", "incident management engineer", "l2 support", "l3 support", "application analyst", "support analyst", "onsite support engineer", "ai support engineer", "senior support engineer"]):
+        return SUPPORT_CATEGORY
+    if _first_match(text, ["performance test engineer", "api test engineer", "jmeter", "postman", "rest assured"]):
+        return API_PERFORMANCE_CATEGORY
+    if _first_match(text, ["validation engineer", "csv engineer", "csv tester", "computer system validation"]):
+        return VALIDATION_CATEGORY
+    return MAYBE_CATEGORY
+
+
+def _location_is_relevant(text: str) -> bool:
+    return bool(_first_match(text, IRELAND_LOCATION_TERMS))
 
 
 def _first_match(text: str, terms: list[str]) -> str:
@@ -195,6 +224,14 @@ def _first_match(text: str, terms: list[str]) -> str:
         if re.search(rf"(?<![a-z0-9]){re.escape(term)}(?![a-z0-9])", text):
             return term
     return ""
+
+
+def normalize_dedupe_value(value: str) -> str:
+    value = _normalize(value)
+    value = re.sub(r"[^\w\s]", " ", value)
+    value = re.sub(r"\bii\s+bilingual\b", "ii bilingual", value)
+    value = re.sub(r"\s+", " ", value)
+    return value.strip()
 
 
 def _strip_negative_phrases(text: str) -> str:

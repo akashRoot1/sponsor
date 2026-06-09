@@ -84,6 +84,9 @@ jobs:
             data/filtered_results.json
             data/rejected_results.json
             data/search_failures.json
+            data/accepted_results.json
+            data/duplicates_removed.json
+            data/source_health.json
           if-no-files-found: warn
 
       - name: Commit updated seen jobs

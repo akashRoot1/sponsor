@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
@@ -36,6 +37,8 @@ class RawJob:
     snippet: str = ""
     work_type: str = ""
     category: str = ""
+    source_type: str = ""
+    source_quality: str = "failed"
 
 
 @dataclass
@@ -49,11 +52,19 @@ class JobResult:
     date_found: str
     category: str
     work_type: str = ""
+    score: int = 0
+    accepted_reason: str = ""
+    source_type: str = ""
+    source_quality: str = ""
 
     @property
     def unique_id(self) -> str:
-        raw = "|".join([self.company, self.title, self.location, self.url]).lower()
+        raw = "|".join([_normalize_key(self.company), _normalize_key(self.title), _normalize_key(self.location), _normalize_key(self.url)])
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    @property
+    def dedupe_key(self) -> str:
+        return "|".join([_normalize_key(self.company), _normalize_key(self.title), _normalize_key(self.location), _normalize_key(self.url)])
 
 
 @dataclass
@@ -66,6 +77,9 @@ class RejectedJob:
     reason: str
     matched_keyword: str = ""
     snippet: str = ""
+    score: int = 0
+    source_type: str = ""
+    source_quality: str = ""
 
 
 @dataclass
@@ -83,6 +97,7 @@ class SourceStats:
     aliases_used: list[str]
     source_type: str
     endpoint: str
+    source_quality: str = "failed"
     raw_jobs_found: int = 0
     accepted_jobs: int = 0
     rejected_jobs: int = 0
@@ -111,6 +126,7 @@ class CompanySearchReport:
 class SearchReport:
     companies: list[CompanySearchReport]
     jobs: list[JobResult]
+    duplicates_removed: list[JobResult] = field(default_factory=list)
 
     @property
     def raw_jobs(self) -> list[RawJob]:
@@ -136,10 +152,24 @@ class SearchReport:
     def no_job_company_count(self) -> int:
         return sum(1 for company in self.companies if company.searched_successfully and not company.had_failure and not company.accepted_jobs)
 
-    def artifacts(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
+    @property
+    def source_health(self) -> list[SourceStats]:
+        return [stats for company in self.companies for stats in company.source_stats]
+
+    def artifacts(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
         return (
             [asdict(job) for job in self.raw_jobs],
             [asdict(job) | {"unique_id": job.unique_id} for job in self.jobs],
             [asdict(job) for job in self.rejected_jobs],
             [asdict(failure) for failure in self.failures],
+            [asdict(job) | {"unique_id": job.unique_id} for job in self.jobs],
+            [asdict(job) | {"unique_id": job.unique_id} for job in self.duplicates_removed],
+            [asdict(stats) for stats in self.source_health],
         )
+
+
+def _normalize_key(value: str) -> str:
+    value = (value or "").lower()
+    value = re.sub(r"[^\w\s]", " ", value)
+    value = re.sub(r"\s+", " ", value)
+    return value.strip()

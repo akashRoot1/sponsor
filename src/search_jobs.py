@@ -3,10 +3,13 @@ from __future__ import annotations
 import logging
 from datetime import datetime
 from typing import Iterable
+import re
 
-from filters import evaluate_job
+import requests
+
+from filters import evaluate_job, normalize_dedupe_value
 from models import CompanyConfig, CompanySearchReport, JobResult, RejectedJob, SearchFailure, SearchReport, SourceStats
-from sources import SourceError, fetch_jobs, new_session, source_endpoint
+from sources import SourceError, fetch_jobs, new_session, source_endpoint, source_quality
 
 
 LOGGER = logging.getLogger(__name__)
@@ -32,7 +35,8 @@ def find_jobs(companies: Iterable[CompanyConfig], generated_at: datetime) -> Sea
             report.searched_successfully,
         )
 
-    return SearchReport(company_reports, _dedupe_jobs(all_jobs))
+    unique_jobs, duplicates_removed = _dedupe_jobs(all_jobs)
+    return SearchReport(company_reports, unique_jobs, duplicates_removed)
 
 
 def _search_company(session, company: CompanyConfig, generated_at: datetime) -> CompanySearchReport:
@@ -44,7 +48,7 @@ def _search_company(session, company: CompanyConfig, generated_at: datetime) -> 
 
     for source in company.sources:
         endpoint = source_endpoint(source)
-        stats = SourceStats(company=company.brand_name, aliases_used=company.aliases, source_type=source.source_type, endpoint=endpoint)
+        stats = SourceStats(company=company.brand_name, aliases_used=company.aliases, source_type=source.source_type, endpoint=endpoint, source_quality=source_quality(source.source_type))
         try:
             raw_jobs = fetch_jobs(session, company, source)
             stats.raw_jobs_found = len(raw_jobs)
@@ -64,6 +68,10 @@ def _search_company(session, company: CompanyConfig, generated_at: datetime) -> 
                             date_found=generated_at.strftime("%Y-%m-%d"),
                             category=decision.category,
                             work_type=raw_job.work_type,
+                            score=decision.score,
+                            accepted_reason=decision.reason,
+                            source_type=raw_job.source_type,
+                            source_quality=raw_job.source_quality,
                         )
                     )
                 else:
@@ -78,6 +86,9 @@ def _search_company(session, company: CompanyConfig, generated_at: datetime) -> 
                             reason=decision.reason,
                             matched_keyword=decision.matched_keyword,
                             snippet=raw_job.snippet[:800],
+                            score=decision.score,
+                            source_type=raw_job.source_type,
+                            source_quality=raw_job.source_quality,
                         )
                     )
                     LOGGER.info("Rejected job company=%s source=%s title=%s reason=%s", company.brand_name, raw_job.source, raw_job.title, decision.reason)
@@ -96,6 +107,11 @@ def _search_company(session, company: CompanyConfig, generated_at: datetime) -> 
             stats.error = str(exc)
             report.failures.append(SearchFailure(company.brand_name, source.source_type, endpoint, str(exc), exc.http_status))
             LOGGER.warning("Source failure company=%s source=%s endpoint=%s status=%s error=%s", company.brand_name, source.source_type, endpoint, exc.http_status, exc)
+        except requests.Timeout as exc:
+            stats.failed = True
+            stats.error = f"timeout: {exc}"
+            report.failures.append(SearchFailure(company.brand_name, source.source_type, endpoint, f"timeout: {exc}"))
+            LOGGER.warning("Source timeout company=%s source=%s endpoint=%s error=%s", company.brand_name, source.source_type, endpoint, exc)
         except Exception as exc:
             stats.failed = True
             stats.error = str(exc)
@@ -104,16 +120,36 @@ def _search_company(session, company: CompanyConfig, generated_at: datetime) -> 
         finally:
             report.source_stats.append(stats)
 
-    report.accepted_jobs = _dedupe_jobs(report.accepted_jobs)
+    report.accepted_jobs, _ = _dedupe_jobs(report.accepted_jobs)
     return report
 
 
-def _dedupe_jobs(jobs: list[JobResult]) -> list[JobResult]:
+def _dedupe_jobs(jobs: list[JobResult]) -> tuple[list[JobResult], list[JobResult]]:
     seen = set()
     unique = []
+    duplicates = []
     for job in jobs:
-        if job.unique_id in seen:
+        key = _job_dedupe_key(job)
+        if key in seen:
+            duplicates.append(job)
             continue
-        seen.add(job.unique_id)
+        seen.add(key)
         unique.append(job)
-    return unique
+    return unique, duplicates
+
+
+def _job_dedupe_key(job: JobResult) -> str:
+    return "|".join(
+        [
+            normalize_dedupe_value(job.company),
+            _normalize_title_for_dedupe(job.title),
+            normalize_dedupe_value(job.location),
+        ]
+    )
+
+
+def _normalize_title_for_dedupe(title: str) -> str:
+    title = normalize_dedupe_value(title)
+    title = re.sub(r"\bii\s+bilingual\b", "ii bilingual", title)
+    title = re.sub(r"\s+", " ", title)
+    return title.strip()

@@ -8,6 +8,7 @@ from html import unescape
 from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 
 import requests
+from requests import Timeout
 from bs4 import BeautifulSoup
 
 from models import CompanyConfig, RawJob, SearchFailure, SourceConfig
@@ -38,7 +39,10 @@ class SourceError(RuntimeError):
 
 def new_session() -> requests.Session:
     session = requests.Session()
-    session.headers.update({"User-Agent": USER_AGENT, "Accept": "application/json,text/html;q=0.9,*/*;q=0.8"})
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (compatible; akashRoot1-sponsor-job-alert/2.0)",
+        "Accept": "application/json,text/html;q=0.9,*/*;q=0.8",
+    })
     return session
 
 
@@ -80,6 +84,16 @@ def source_endpoint(source: SourceConfig) -> str:
     return source.source_type
 
 
+def source_quality(source_type: str) -> str:
+    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs"}:
+        return "direct_api" if source_type in {"workday", "amazon_jobs"} else "job_board_api"
+    if source_type == "company_careers":
+        return "direct_career_page"
+    if source_type == "fallback_search":
+        return "search_engine_fallback"
+    return "failed"
+
+
 def greenhouse_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
     response = session.get(endpoint, timeout=30)
@@ -93,6 +107,8 @@ def greenhouse_jobs(session: requests.Session, company: CompanyConfig, source: S
             source="Greenhouse",
             endpoint=endpoint,
             snippet=_html_to_text(job.get("content", "")),
+            source_type=source.source_type,
+            source_quality=source_quality(source.source_type),
         )
         for job in response.json().get("jobs", [])
     ]
@@ -113,6 +129,8 @@ def lever_jobs(session: requests.Session, company: CompanyConfig, source: Source
             snippet=job.get("descriptionPlain", ""),
             work_type=(job.get("categories") or {}).get("commitment", ""),
             category=(job.get("categories") or {}).get("team", ""),
+            source_type=source.source_type,
+            source_quality=source_quality(source.source_type),
         )
         for job in response.json()
     ]
@@ -136,6 +154,8 @@ def ashby_jobs(session: requests.Session, company: CompanyConfig, source: Source
                 snippet=_html_to_text(job.get("descriptionHtml", "")),
                 work_type=" / ".join(part for part in [job.get("employmentType", ""), job.get("workplaceType", "")] if part),
                 category=job.get("department", "") or job.get("team", ""),
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
             )
         )
     return jobs
@@ -158,6 +178,8 @@ def smartrecruiters_jobs(session: requests.Session, company: CompanyConfig, sour
                 endpoint=endpoint,
                 snippet=job.get("name", ""),
                 work_type=job.get("typeOfEmployment", {}).get("label", "") if isinstance(job.get("typeOfEmployment"), dict) else "",
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
             )
         )
     return jobs
@@ -166,22 +188,39 @@ def smartrecruiters_jobs(session: requests.Session, company: CompanyConfig, sour
 def workday_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
     jobs: list[RawJob] = []
-    response = session.post(endpoint, json={"appliedFacets": {}, "limit": 100, "offset": 0, "searchText": ""}, timeout=30)
-    _raise_for_status(response, endpoint)
-    for job in response.json().get("jobPostings", []):
-        path = job.get("externalPath", "")
-        jobs.append(
-            RawJob(
-                company=company.brand_name,
-                title=job.get("title", ""),
-                location=job.get("locationsText", ""),
-                url=f"https://{source.host}/{source.site}{path}",
-                source="Workday",
-                endpoint=endpoint,
-                snippet=" ".join(str(value) for value in job.get("bulletFields", [])),
-                work_type=job.get("remoteType", ""),
-            )
+    headers = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Mozilla/5.0"}
+    limit = 20
+    offset = 0
+    while True:
+        response = session.post(
+            endpoint,
+            json={"appliedFacets": {}, "limit": limit, "offset": offset, "searchText": ""},
+            headers=headers,
+            timeout=30,
         )
+        _raise_for_status(response, endpoint)
+        data = response.json()
+        postings = data.get("jobPostings", [])
+        for job in postings:
+            path = job.get("externalPath", "")
+            jobs.append(
+                RawJob(
+                    company=company.brand_name,
+                    title=job.get("title", ""),
+                    location=job.get("locationsText", ""),
+                    url=f"https://{source.host}/{source.site}{path}",
+                    source="Workday",
+                    endpoint=endpoint,
+                    snippet=" ".join(str(value) for value in job.get("bulletFields", [])),
+                    work_type=job.get("remoteType", ""),
+                    source_type=source.source_type,
+                    source_quality=source_quality(source.source_type),
+                )
+            )
+        offset += limit
+        if not postings or offset >= int(data.get("total", len(jobs))):
+            break
+        time.sleep(0.2)
     return jobs
 
 
@@ -202,6 +241,8 @@ def amazon_jobs(session: requests.Session, company: CompanyConfig, source: Sourc
                     source="Amazon Jobs",
                     endpoint=endpoint,
                     snippet=_html_to_text(job.get("description", "")),
+                    source_type=source.source_type,
+                    source_quality=source_quality(source.source_type),
                 )
             )
         time.sleep(0.2)
@@ -220,7 +261,7 @@ def company_careers_jobs(session: requests.Session, company: CompanyConfig, sour
         if not text or not _looks_like_job_link(text, href):
             continue
         url = requests.compat.urljoin(endpoint, href)
-        jobs.append(RawJob(company=company.brand_name, title=text, location="", url=url, source="Company Careers", endpoint=endpoint, snippet=text))
+        jobs.append(RawJob(company=company.brand_name, title=text, location="", url=url, source="Company Careers", endpoint=endpoint, snippet=text, source_type=source.source_type, source_quality=source_quality(source.source_type)))
     return _dedupe_raw(jobs)
 
 
@@ -241,7 +282,7 @@ def fallback_search_jobs(session: requests.Session, company: CompanyConfig, sour
             continue
         title = _clean_text(link.get_text(" "))
         snippet_text = _clean_text(snippet.get_text(" ")) if snippet else ""
-        jobs.append(RawJob(company=company.brand_name, title=title, location=_extract_location(snippet_text), url=url, source="Bing fallback", endpoint=endpoint, snippet=snippet_text))
+        jobs.append(RawJob(company=company.brand_name, title=title, location=_extract_location(snippet_text), url=url, source="Bing fallback", endpoint=endpoint, snippet=snippet_text, source_type=source.source_type, source_quality=source_quality(source.source_type)))
     return jobs[:10]
 
 
@@ -254,6 +295,10 @@ def _raise_for_status(response: requests.Response, endpoint: str) -> None:
     try:
         response.raise_for_status()
     except requests.HTTPError as exc:
+        if response.status_code == 403:
+            raise SourceError(f"blocked_by_site: {exc} for endpoint {endpoint}", response.status_code) from exc
+        if response.status_code == 404:
+            raise SourceError(f"invalid_source_url: {exc} for endpoint {endpoint}", response.status_code) from exc
         raise SourceError(f"{exc} for endpoint {endpoint}", response.status_code) from exc
 
 
