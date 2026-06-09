@@ -68,6 +68,8 @@ def fetch_jobs(session: requests.Session, company: CompanyConfig, source: Source
         return bamboohr_jobs(session, company, source)
     if source.source_type == "personio":
         return personio_jobs(session, company, source)
+    if source.source_type == "attrax":
+        return attrax_jobs(session, company, source)
     if source.source_type == "fallback_search":
         return fallback_search_jobs(session, company, source)
     raise SourceError(f"Unsupported source type: {source.source_type}")
@@ -94,11 +96,13 @@ def source_endpoint(source: SourceConfig) -> str:
         return source.endpoint or f"https://{source.slug}.bamboohr.com/careers/list"
     if source.source_type == "personio":
         return source.endpoint or f"https://{source.slug}.jobs.personio.com"
+    if source.source_type == "attrax":
+        return source.endpoint
     return source.source_type
 
 
 def source_quality(source_type: str) -> str:
-    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio"}:
+    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio", "attrax"}:
         return "direct_api" if source_type in {"workday", "amazon_jobs"} else "job_board_api"
     if source_type == "company_careers":
         return "direct_career_page"
@@ -380,6 +384,51 @@ def personio_jobs(session: requests.Session, company: CompanyConfig, source: Sou
     return _dedupe_raw(jobs)
 
 
+def attrax_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    base_endpoint = source_endpoint(source)
+    terms = ["qa", "quality", "test", "testing", "validation", "csv", "support"]
+    jobs: list[RawJob] = []
+    for term in terms:
+        response = request_with_retries(session, "GET", base_endpoint, params={"q": term}, timeout=30)
+        endpoint = response.url if getattr(response, "url", "") else f"{base_endpoint}?q={quote_plus(term)}"
+        _raise_for_status(response, endpoint)
+        soup = BeautifulSoup(response.text, "html.parser")
+        for tile in soup.select(".attrax-vacancy-tile"):
+            title_link = tile.select_one(".attrax-vacancy-tile__title[href]")
+            if not title_link:
+                continue
+            title = _clean_text(title_link.get_text(" "))
+            url = requests.compat.urljoin(base_endpoint, title_link["href"])
+            location = _select_text(tile, ".attrax-vacancy-tile__location-freetext .attrax-vacancy-tile__item-value")
+            work_type = " / ".join(
+                part
+                for part in [
+                    _select_text(tile, ".attrax-vacancy-tile__option-work-location-type .attrax-vacancy-tile__item-value"),
+                    _select_text(tile, ".attrax-vacancy-tile__option-job-type .attrax-vacancy-tile__item-value"),
+                ]
+                if part
+            )
+            category = _select_text(tile, ".attrax-vacancy-tile__option-function .attrax-vacancy-tile__item-value")
+            snippet = _select_text(tile, ".attrax-vacancy-tile__description") or _clean_text(tile.get_text(" "))
+            jobs.append(
+                RawJob(
+                    company=company.brand_name,
+                    title=title,
+                    location=location,
+                    url=url,
+                    source="Attrax Careers",
+                    endpoint=endpoint,
+                    snippet=snippet,
+                    work_type=work_type,
+                    category=category,
+                    source_type=source.source_type,
+                    source_quality=source_quality(source.source_type),
+                )
+            )
+        time.sleep(0.2)
+    return _dedupe_raw(jobs)
+
+
 def fallback_search_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     query = f'"{company.brand_name}" ("QA" OR "SDET" OR "test automation" OR "support engineer" OR "validation engineer") Ireland jobs'
     endpoint = f"https://www.bing.com/search?q={quote_plus(query)}"
@@ -507,6 +556,11 @@ def _extract_location(text: str) -> str:
         if term in lower:
             return term.title()
     return ""
+
+
+def _select_text(node, selector: str) -> str:
+    element = node.select_one(selector)
+    return _clean_text(element.get_text(" ")) if element else ""
 
 
 def _html_to_text(html: str) -> str:

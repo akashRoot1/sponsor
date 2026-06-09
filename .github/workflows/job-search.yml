@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Run only priority companies with debug details"
+        description: "Run only priority companies with debug details, including AbbVie"
         required: false
         default: "false"
         type: choice

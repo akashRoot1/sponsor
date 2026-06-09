@@ -14,7 +14,7 @@ The search now prioritizes direct public company sources instead of DuckDuckGo o
 - SmartRecruiters public API
 - Workday CXS API where reliable
 - Amazon Jobs API
-- Teamtailor, BambooHR, and Personio public job boards where configured
+- Teamtailor, BambooHR, Personio, and Attrax public job boards where configured
 - Simple public company careers pages
 - Search fallback only when a direct source is unavailable
 
@@ -52,7 +52,7 @@ Open the repository on GitHub:
 
 | Input | Meaning |
 | --- | --- |
-| `test_mode` | Searches only priority companies: Cubic Telecom, Stripe, Workday, Amazon, Mastercard, Version 1, Accenture, Fiserv, PayPal, Guidewire |
+| `test_mode` | Searches only priority companies: Cubic Telecom, Stripe, Workday, Amazon, Mastercard, Version 1, Accenture, Fiserv, PayPal, Guidewire, AbbVie |
 | `send_email` | Sends or skips the email |
 | `update_seen` | Updates `data/seen_jobs.json` only after a successful email |
 | `max_companies` | Optional number of companies to search |
@@ -208,6 +208,8 @@ company(
 ```
 
 Supported source types are implemented in `src/sources.py`.
+
+AbbVie is configured through the `attrax` source at `https://careers.abbvie.com/en/jobs`, which captures result cards such as `Quality Engineer` in `Sligo, SO`.
 
 ## Add Keywords
 

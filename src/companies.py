@@ -29,6 +29,7 @@ PRIORITY_BRANDS = {
     "Fiserv",
     "PayPal",
     "Guidewire",
+    "AbbVie",
 }
 
 
@@ -126,6 +127,7 @@ COMPANIES = [
     company("Johnson & Johnson Vision Care Ireland Unlimited Company", "Johnson & Johnson", ["Johnson & Johnson", "J&J"], "https://www.careers.jnj.com", [source("company_careers", endpoint="https://www.careers.jnj.com")]),
     company("Boston Scientific Ireland Limited", "Boston Scientific", ["Boston Scientific"], "https://jobs.bostonscientific.com", [source("company_careers", endpoint="https://jobs.bostonscientific.com")]),
     company("Boston Scientific Cork", "Boston Scientific", ["Boston Scientific"], "https://jobs.bostonscientific.com", [source("company_careers", endpoint="https://jobs.bostonscientific.com")]),
+    company("AbbVie Ireland NL B.V.", "AbbVie", ["AbbVie", "Allergan"], "https://careers.abbvie.com/en/jobs", [source("attrax", endpoint="https://careers.abbvie.com/en/jobs")], True),
     company("Abbott Ireland", "Abbott", ["Abbott"], "https://www.jobs.abbott", [source("company_careers", endpoint="https://www.jobs.abbott")]),
     company("Abbott Diagnostics", "Abbott", ["Abbott"], "https://www.jobs.abbott", [source("company_careers", endpoint="https://www.jobs.abbott")]),
     company("Regeneron Ireland DAC", "Regeneron", ["Regeneron"], "https://careers.regeneron.com", [source("company_careers", endpoint="https://careers.regeneron.com")]),

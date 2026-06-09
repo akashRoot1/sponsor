@@ -44,6 +44,7 @@ def test_accepts_broad_qa_test_quality_and_support_matches() -> None:
         ("Manual Test Analyst", "Ireland"),
         ("QA Engineer", "Dublin"),
         ("Quality Engineer", "Ireland"),
+        ("Quality Engineer", "Sligo, SO", "AbbVie"),
         ("Quality Assurance Engineer", "Dublin"),
         ("Software Test Engineer", "Cork"),
         ("Test Automation Engineer", "Dublin"),
@@ -57,6 +58,7 @@ def test_accepts_broad_qa_test_quality_and_support_matches() -> None:
         ("Performance Test Engineer", "Ireland"),
         ("API Test Engineer", "Dublin"),
         ("Validation Engineer", "Galway"),
+        ("Validation Engineer", "Sligo, SO", "AbbVie"),
         ("CSV Tester", "Cork"),
     ]
     for title, location, *company in examples:

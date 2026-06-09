@@ -13,15 +13,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import search_jobs
 from models import CompanyConfig, RawJob, SourceConfig
-from sources import SourceError, _json_response, request_with_retries
+from sources import SourceError, _json_response, attrax_jobs, request_with_retries
 
 
 class FakeResponse:
-    def __init__(self, status_code: int = 200, payload: object | None = None, json_error: bool = False) -> None:
+    def __init__(self, status_code: int = 200, payload: object | None = None, json_error: bool = False, text: str = "", url: str = "https://example.com/jobs") -> None:
         self.status_code = status_code
         self.payload = payload if payload is not None else {}
         self.json_error = json_error
-        self.text = "<html></html>"
+        self.text = text or "<html>ok</html>"
+        self.url = url
         self.retry_count = 0
 
     def json(self) -> object:
@@ -111,3 +112,30 @@ def test_fallback_fetch_logic_is_triggered_when_primary_source_fails(monkeypatch
     assert len(report.jobs) == 1
     assert report.fallback_fetch_count == 1
     assert report.partially_successful_company_count == 1
+
+
+def test_attrax_parser_captures_abbvie_quality_engineer_card() -> None:
+    html = """
+    <div class="attrax-vacancy-tile" data-jobid="24893">
+      <a class="attrax-vacancy-tile__title" href="/en/job/quality-engineer-in-sligo-so-jid-24893">Quality Engineer</a>
+      <div class="attrax-vacancy-tile__location-freetext">
+        <p class="attrax-vacancy-tile__item-value">Sligo, SO</p>
+      </div>
+      <div class="attrax-vacancy-tile__option-work-location-type">
+        <p class="attrax-vacancy-tile__item-value">Hybrid</p>
+      </div>
+      <div class="attrax-vacancy-tile__option-job-type">
+        <p class="attrax-vacancy-tile__item-value">Full-time</p>
+      </div>
+      <div class="attrax-vacancy-tile__option-function">
+        <p class="attrax-vacancy-tile__item-value">Operations</p>
+      </div>
+      <div class="attrax-vacancy-tile__description">The role of the Quality Engineer at AbbVie Ballytivnan.</div>
+    </div>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://careers.abbvie.com/en/jobs?q=quality")])
+    company = CompanyConfig("AbbVie Ireland NL B.V.", "AbbVie", ["AbbVie"], sources=[SourceConfig("attrax", endpoint="https://careers.abbvie.com/en/jobs")])
+    jobs = attrax_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Quality Engineer"
+    assert jobs[0].location == "Sligo, SO"
+    assert jobs[0].url == "https://careers.abbvie.com/en/job/quality-engineer-in-sligo-so-jid-24893"

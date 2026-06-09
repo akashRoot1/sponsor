@@ -152,8 +152,32 @@ IRELAND_LOCATION_TERMS = [
     "dublin",
     "cork",
     "galway",
-    "limerick",
+    "sligo",
+    "westport",
+    "mayo",
+    "athlone",
+    "carlow",
+    "kilkenny",
+    "tipperary",
     "waterford",
+    "wexford",
+    "meath",
+    "kildare",
+    "louth",
+    "wicklow",
+    "clare",
+    "donegal",
+    "leitrim",
+    "roscommon",
+    "longford",
+    "offaly",
+    "laois",
+    "westmeath",
+    "monaghan",
+    "cavan",
+    "kerry",
+    "kilkenny",
+    "limerick",
     "remote ireland",
     "hybrid ireland",
     "ireland remote",
@@ -199,7 +223,7 @@ GENERIC_QUALITY_TERMS = [
     "construction quality manager",
     "data center construction quality",
 ]
-NON_SOFTWARE_QUALITY_CONTEXT = ["hardware", "manufacturing", "supplier", "cabling", "construction", "food", "data center", "network"]
+NON_SOFTWARE_QUALITY_CONTEXT = ["hardware", "supplier", "cabling", "construction", "food", "data center", "network"]
 PURE_DEVELOPER_TERMS = ["backend engineer", "frontend engineer", "front end engineer", "software developer", "full stack engineer", "software engineer"]
 PURE_MANAGER_TERMS = ["manager", "director", "vp ", "svp ", "head of"]
 
@@ -340,9 +364,11 @@ def _is_non_software_quality(title: str, description: str) -> bool:
     text = " ".join([title, description])
     if not _first_match(title, ["quality", "validation"]):
         return False
-    if _first_match(title, ["quality analyst", "quality assurance", "software quality", "qa", "test", "testing", "validation engineer"]):
+    if _first_match(title, GENERIC_QUALITY_TERMS):
+        return True
+    if _first_match(title, ["quality analyst", "quality engineer", "quality assurance", "software quality", "qa", "test", "testing", "validation engineer"]):
         return False
-    return bool(_first_match(title, GENERIC_QUALITY_TERMS) or _first_match(text, NON_SOFTWARE_QUALITY_CONTEXT))
+    return bool(_first_match(text, NON_SOFTWARE_QUALITY_CONTEXT))
 
 
 def normalize_dedupe_value(value: str) -> str:
