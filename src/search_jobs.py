@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import re
 import time
+import base64
 from dataclasses import dataclass
 from datetime import datetime
 from html import unescape
@@ -102,7 +103,9 @@ def find_jobs(companies: Iterable[str], keywords: list[str], generated_at: datet
     for index, company in enumerate(companies, start=1):
         LOGGER.info("Searching %s (%s)", company, index)
         try:
-            results.extend(_search_company(session, company, keywords, generated_at))
+            company_results = _search_company(session, company, keywords, generated_at)
+            LOGGER.info("Accepted %s candidate jobs for %s.", len(company_results), company)
+            results.extend(company_results)
         except Exception:
             LOGGER.exception("Search failed for %s", company)
         time.sleep(1.2)
@@ -117,26 +120,62 @@ def _search_company(
     generated_at: datetime,
 ) -> list[JobResult]:
     broad_terms = '"QA" OR "SDET" OR "test automation" OR "software test" OR "validation engineer"'
-    queries = [
-        f'"{company}" ({broad_terms}) Ireland jobs',
-        f'"{company}" ("Cypress" OR "Playwright" OR "Selenium" OR "Postman" OR "JMeter") Ireland careers',
-    ]
+    company_names = _company_search_names(company)
+    queries = []
+    for company_name in company_names[:2]:
+        queries.extend(
+            [
+                f'"{company_name}" ({broad_terms}) Ireland jobs',
+                f'"{company_name}" ("Cypress" OR "Playwright" OR "Selenium" OR "Postman" OR "JMeter") Ireland careers',
+            ]
+        )
 
     found: list[JobResult] = []
     for query in queries:
-        for item in _duckduckgo_search(session, query):
+        items = _bing_search(session, query)
+        if not items:
+            items = _duckduckgo_search(session, query)
+        LOGGER.debug("Query returned %s raw items: %s", len(items), query)
+        for item in items:
             job = _candidate_to_job(item, company, keywords, generated_at)
             if job:
                 found.append(job)
-        time.sleep(1.0)
+        time.sleep(0.8)
 
     return found
+
+
+def _bing_search(session: requests.Session, query: str) -> list[dict[str, str]]:
+    response = session.get("https://www.bing.com/search", params={"q": query}, timeout=20)
+    response.raise_for_status()
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    items: list[dict[str, str]] = []
+    for result in soup.select("li.b_algo"):
+        link = result.find("a")
+        if not link or not link.get("href"):
+            continue
+
+        snippet = result.find("p")
+        items.append(
+            {
+                "title": _clean_text(link.get_text(" ")),
+                "url": _clean_bing_url(link["href"]),
+                "snippet": _clean_text(snippet.get_text(" ")) if snippet else "",
+            }
+        )
+
+    return items[:10]
 
 
 def _duckduckgo_search(session: requests.Session, query: str) -> list[dict[str, str]]:
     url = f"https://duckduckgo.com/html/?q={quote_plus(query)}"
     response = session.get(url, timeout=20)
     response.raise_for_status()
+    if response.status_code == 202:
+        LOGGER.warning("DuckDuckGo returned HTTP 202 for query: %s", query)
+        return []
+
     soup = BeautifulSoup(response.text, "html.parser")
 
     items: list[dict[str, str]] = []
@@ -169,8 +208,6 @@ def _candidate_to_job(
 
     if not _is_allowed_direct_source(url):
         return None
-    if not _contains_any(text, IRELAND_TERMS):
-        return None
     if _contains_any(text, EXCLUDE_TERMS):
         return None
 
@@ -190,6 +227,66 @@ def _candidate_to_job(
         source=_source_name(url),
         date_found=generated_at.strftime("%Y-%m-%d"),
     )
+
+
+def _company_search_names(company: str) -> list[str]:
+    aliases = {
+        "Amazon Web Services EMEA SARL": ["Amazon Web Services", "AWS"],
+        "Amazon Development Centre Ireland Limited": ["Amazon"],
+        "Amazon Data Services Ireland Limited": ["Amazon"],
+        "Amazon Ireland Support Services Limited": ["Amazon"],
+        "Apple Distribution International Limited": ["Apple"],
+        "Apple Operations International Limited": ["Apple"],
+        "Meta Platforms Ireland Limited": ["Meta"],
+        "Toasttab Ireland Limited": ["Toast"],
+        "2K Games Dublin Limited": ["2K Games"],
+        "Tata Consultancy Services Ireland Limited": ["Tata Consultancy Services", "TCS"],
+        "Tata Consultancy Services Limited": ["Tata Consultancy Services", "TCS"],
+        "Cognizant Technology Solutions Ireland Limited": ["Cognizant"],
+        "HCL Ireland Information Systems Limited": ["HCLTech", "HCL"],
+        "HCL Technologies Limited": ["HCLTech", "HCL"],
+        "Ernst & Young": ["EY"],
+        "PricewaterhouseCoopers Services": ["PwC"],
+        "MasterCard Ireland Limited": ["Mastercard"],
+        "J.P. Morgan SE": ["JPMorgan Chase", "J.P. Morgan"],
+        "Citibank Europe Public Limited Company": ["Citi", "Citibank"],
+        "Citibank N.A.": ["Citi", "Citibank"],
+        "Bank of Ireland Group PLC": ["Bank of Ireland"],
+        "Allied Irish Banks PLC": ["AIB"],
+        "Permanent TSB Public Limited Company": ["Permanent TSB"],
+        "Dell Products Unlimited Company": ["Dell"],
+        "EMC Information Systems International Unlimited Company": ["Dell EMC", "Dell"],
+        "Oracle EMEA Ltd": ["Oracle"],
+        "Oracle Financial Services Software B.V": ["Oracle Financial Services"],
+        "MSD International GmbH": ["MSD Ireland", "Merck"],
+        "Johnson & Johnson Vision Care Ireland Unlimited Company": ["Johnson & Johnson"],
+        "Boston Scientific Cork": ["Boston Scientific"],
+        "Abbott Diagnostics": ["Abbott"],
+    }
+
+    cleaned = re.sub(
+        r"\b(Limited|Unlimited Company|Ireland Limited|Ireland|Research|Operations|DAC|LLP|PLC|Public Limited Company|Designated Activity Company|UC|GmbH|B\.V|Ltd|Co Ltd|SARL)\b",
+        "",
+        company,
+        flags=re.I,
+    )
+    cleaned = re.sub(r"\s+", " ", cleaned).strip(" ,-")
+    names = aliases.get(company, []) + [cleaned, company]
+    return [name for index, name in enumerate(names) if name and name not in names[:index]]
+
+
+def _clean_bing_url(url: str) -> str:
+    parsed = urlparse(url)
+    if parsed.netloc.endswith("bing.com") and parsed.path.startswith("/ck/"):
+        encoded = parse_qs(parsed.query).get("u", [""])[0]
+        if encoded.startswith("a1"):
+            payload = encoded[2:]
+            padding = "=" * (-len(payload) % 4)
+            try:
+                return base64.urlsafe_b64decode(payload + padding).decode("utf-8")
+            except UnicodeDecodeError:
+                return url
+    return unescape(url)
 
 
 def _clean_duckduckgo_url(url: str) -> str:
@@ -257,3 +354,7 @@ def _dedupe_results(results: Iterable[JobResult]) -> list[JobResult]:
         seen_urls.add(result.url)
         unique.append(result)
     return unique
+
+
+def _clean_text(text: str) -> str:
+    return re.sub(r"\s+", " ", unescape(text)).strip()
