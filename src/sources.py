@@ -8,7 +8,6 @@ from html import unescape
 from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 
 import requests
-from requests import Timeout
 from bs4 import BeautifulSoup
 
 from models import CompanyConfig, RawJob, SearchFailure, SourceConfig
@@ -32,9 +31,11 @@ LOW_QUALITY_SEARCH_HOSTS = [
 
 
 class SourceError(RuntimeError):
-    def __init__(self, message: str, http_status: int | None = None) -> None:
+    def __init__(self, message: str, http_status: int | None = None, error_type: str = "api_failure", retry_count: int = 0) -> None:
         super().__init__(message)
         self.http_status = http_status
+        self.error_type = error_type
+        self.retry_count = retry_count
 
 
 def new_session() -> requests.Session:
@@ -61,6 +62,12 @@ def fetch_jobs(session: requests.Session, company: CompanyConfig, source: Source
         return amazon_jobs(session, company, source)
     if source.source_type == "company_careers":
         return company_careers_jobs(session, company, source)
+    if source.source_type == "teamtailor":
+        return teamtailor_jobs(session, company, source)
+    if source.source_type == "bamboohr":
+        return bamboohr_jobs(session, company, source)
+    if source.source_type == "personio":
+        return personio_jobs(session, company, source)
     if source.source_type == "fallback_search":
         return fallback_search_jobs(session, company, source)
     raise SourceError(f"Unsupported source type: {source.source_type}")
@@ -81,11 +88,17 @@ def source_endpoint(source: SourceConfig) -> str:
         return f"https://{source.host}/wday/cxs/{source.tenant}/{source.site}/jobs"
     if source.source_type == "amazon_jobs":
         return "https://www.amazon.jobs/en/search.json"
+    if source.source_type == "teamtailor":
+        return source.endpoint or f"https://{source.slug}.teamtailor.com/jobs"
+    if source.source_type == "bamboohr":
+        return source.endpoint or f"https://{source.slug}.bamboohr.com/careers/list"
+    if source.source_type == "personio":
+        return source.endpoint or f"https://{source.slug}.jobs.personio.com"
     return source.source_type
 
 
 def source_quality(source_type: str) -> str:
-    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs"}:
+    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio"}:
         return "direct_api" if source_type in {"workday", "amazon_jobs"} else "job_board_api"
     if source_type == "company_careers":
         return "direct_career_page"
@@ -94,10 +107,46 @@ def source_quality(source_type: str) -> str:
     return "failed"
 
 
+def request_with_retries(session: requests.Session, method: str, url: str, **kwargs) -> requests.Response:
+    retry_statuses = {429, 500, 502, 503, 504}
+    delays = [1, 2, 4]
+    retries = 0
+    last_error: Exception | None = None
+    for attempt in range(1, 4):
+        try:
+            response = session.request(method, url, **kwargs)
+            response.retry_count = retries
+            if response.status_code in retry_statuses:
+                last_error = SourceError(f"http_{response.status_code}: temporary HTTP failure for endpoint {url}", response.status_code, "api_failure", retries)
+                if attempt < 3:
+                    time.sleep(delays[attempt - 1])
+                    retries += 1
+                    continue
+            if _empty_response(response) and attempt < 3:
+                last_error = SourceError(f"empty_response: empty response body for endpoint {url}", response.status_code, "api_failure", retries)
+                time.sleep(delays[attempt - 1])
+                retries += 1
+                continue
+            return response
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            last_error = exc
+            if attempt < 3:
+                time.sleep(delays[attempt - 1])
+                retries += 1
+                continue
+            error_type = "timeout_failure" if isinstance(exc, requests.Timeout) else "network_failure"
+            raise SourceError(f"{error_type}: {exc} for endpoint {url}", None, error_type, retries) from exc
+    if isinstance(last_error, SourceError):
+        last_error.retry_count = retries
+        raise last_error
+    raise SourceError(f"api_failure: request failed for endpoint {url}", None, "api_failure", retries)
+
+
 def greenhouse_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
-    response = session.get(endpoint, timeout=30)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
     _raise_for_status(response, endpoint)
+    data = _json_response(response, endpoint)
     return [
         RawJob(
             company=company.brand_name,
@@ -110,14 +159,15 @@ def greenhouse_jobs(session: requests.Session, company: CompanyConfig, source: S
             source_type=source.source_type,
             source_quality=source_quality(source.source_type),
         )
-        for job in response.json().get("jobs", [])
+        for job in data.get("jobs", [])
     ]
 
 
 def lever_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
-    response = session.get(endpoint, timeout=30)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
     _raise_for_status(response, endpoint)
+    data = _json_response(response, endpoint)
     return [
         RawJob(
             company=company.brand_name,
@@ -132,16 +182,17 @@ def lever_jobs(session: requests.Session, company: CompanyConfig, source: Source
             source_type=source.source_type,
             source_quality=source_quality(source.source_type),
         )
-        for job in response.json()
+        for job in data
     ]
 
 
 def ashby_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
-    response = session.get(endpoint, timeout=30)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
     _raise_for_status(response, endpoint)
+    data = _json_response(response, endpoint)
     jobs = []
-    for job in response.json().get("jobs", []):
+    for job in data.get("jobs", []):
         location = _ashby_location(job)
         jobs.append(
             RawJob(
@@ -163,10 +214,11 @@ def ashby_jobs(session: requests.Session, company: CompanyConfig, source: Source
 
 def smartrecruiters_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
-    response = session.get(endpoint, timeout=30)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
     _raise_for_status(response, endpoint)
+    data = _json_response(response, endpoint)
     jobs = []
-    for job in response.json().get("content", []):
+    for job in data.get("content", []):
         location = job.get("location") or {}
         jobs.append(
             RawJob(
@@ -192,14 +244,16 @@ def workday_jobs(session: requests.Session, company: CompanyConfig, source: Sour
     limit = 20
     offset = 0
     while True:
-        response = session.post(
+        response = request_with_retries(
+            session,
+            "POST",
             endpoint,
             json={"appliedFacets": {}, "limit": limit, "offset": offset, "searchText": ""},
             headers=headers,
             timeout=30,
         )
         _raise_for_status(response, endpoint)
-        data = response.json()
+        data = _json_response(response, endpoint)
         postings = data.get("jobPostings", [])
         for job in postings:
             path = job.get("externalPath", "")
@@ -228,9 +282,10 @@ def amazon_jobs(session: requests.Session, company: CompanyConfig, source: Sourc
     endpoint = source_endpoint(source)
     jobs: list[RawJob] = []
     for term in ["QA", "SDET", "Software Test", "Test Automation", "Support Engineer", "Performance Test", "Validation Engineer"]:
-        response = session.get(endpoint, params={"base_query": term, "country": "IRL", "result_limit": 50}, timeout=30)
+        response = request_with_retries(session, "GET", endpoint, params={"base_query": term, "country": "IRL", "result_limit": 50}, timeout=30)
         _raise_for_status(response, endpoint)
-        for job in response.json().get("jobs", []):
+        data = _json_response(response, endpoint)
+        for job in data.get("jobs", []):
             path = job.get("job_path", "")
             jobs.append(
                 RawJob(
@@ -251,7 +306,7 @@ def amazon_jobs(session: requests.Session, company: CompanyConfig, source: Sourc
 
 def company_careers_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source.endpoint
-    response = session.get(endpoint, timeout=30)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
     _raise_for_status(response, endpoint)
     soup = BeautifulSoup(response.text, "html.parser")
     jobs = []
@@ -265,10 +320,70 @@ def company_careers_jobs(session: requests.Session, company: CompanyConfig, sour
     return _dedupe_raw(jobs)
 
 
+def teamtailor_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    return _html_careers_jobs(session, company, source, endpoint, "Teamtailor")
+
+
+def bamboohr_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
+    _raise_for_status(response, endpoint)
+    try:
+        data = _json_response(response, endpoint)
+    except SourceError:
+        return _html_jobs_from_text(company, source, endpoint, response.text, "BambooHR")
+    postings = data.get("result", data) if isinstance(data, dict) else data
+    jobs = []
+    for job in postings if isinstance(postings, list) else []:
+        jobs.append(
+            RawJob(
+                company=company.brand_name,
+                title=job.get("jobOpeningName", "") or job.get("title", ""),
+                location=job.get("location", {}).get("name", "") if isinstance(job.get("location"), dict) else job.get("location", ""),
+                url=job.get("url", "") or endpoint,
+                source="BambooHR",
+                endpoint=endpoint,
+                snippet=job.get("description", "") or job.get("title", ""),
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
+            )
+        )
+    return _dedupe_raw(jobs)
+
+
+def personio_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
+    _raise_for_status(response, endpoint)
+    try:
+        data = _json_response(response, endpoint)
+    except SourceError:
+        return _html_jobs_from_text(company, source, endpoint, response.text, "Personio")
+    postings = data.get("data", data) if isinstance(data, dict) else data
+    jobs = []
+    for job in postings if isinstance(postings, list) else []:
+        attributes = job.get("attributes", job)
+        jobs.append(
+            RawJob(
+                company=company.brand_name,
+                title=attributes.get("name", "") or attributes.get("title", ""),
+                location=attributes.get("office", "") or attributes.get("location", ""),
+                url=attributes.get("url", "") or endpoint,
+                source="Personio",
+                endpoint=endpoint,
+                snippet=attributes.get("description", "") or attributes.get("name", ""),
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
+            )
+        )
+    return _dedupe_raw(jobs)
+
+
 def fallback_search_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     query = f'"{company.brand_name}" ("QA" OR "SDET" OR "test automation" OR "support engineer" OR "validation engineer") Ireland jobs'
     endpoint = f"https://www.bing.com/search?q={quote_plus(query)}"
-    response = session.get("https://www.bing.com/search", params={"q": query}, timeout=30)
+    response = request_with_retries(session, "GET", "https://www.bing.com/search", params={"q": query}, timeout=30)
     _raise_for_status(response, endpoint)
     soup = BeautifulSoup(response.text, "html.parser")
     jobs = []
@@ -295,11 +410,56 @@ def _raise_for_status(response: requests.Response, endpoint: str) -> None:
     try:
         response.raise_for_status()
     except requests.HTTPError as exc:
+        retry_count = getattr(response, "retry_count", 0)
         if response.status_code == 403:
-            raise SourceError(f"blocked_by_site: {exc} for endpoint {endpoint}", response.status_code) from exc
+            raise SourceError(f"blocked_by_site: {exc} for endpoint {endpoint}", response.status_code, "blocked_by_site", retry_count) from exc
         if response.status_code == 404:
-            raise SourceError(f"invalid_source_url: {exc} for endpoint {endpoint}", response.status_code) from exc
-        raise SourceError(f"{exc} for endpoint {endpoint}", response.status_code) from exc
+            raise SourceError(f"invalid_source_url: {exc} for endpoint {endpoint}", response.status_code, "invalid_source_url", retry_count) from exc
+        raise SourceError(f"api_failure: {exc} for endpoint {endpoint}", response.status_code, "api_failure", retry_count) from exc
+
+
+def _empty_response(response: requests.Response) -> bool:
+    return response.status_code == 200 and not (response.text or "").strip()
+
+
+def _json_response(response: requests.Response, endpoint: str) -> object:
+    try:
+        return response.json()
+    except ValueError as exc:
+        retry_count = getattr(response, "retry_count", 0)
+        raise SourceError(f"parsing_error: malformed JSON from endpoint {endpoint}", response.status_code, "parsing_failure", retry_count) from exc
+
+
+def _html_careers_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig, endpoint: str, source_name: str) -> list[RawJob]:
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
+    _raise_for_status(response, endpoint)
+    return _html_jobs_from_text(company, source, endpoint, response.text, source_name)
+
+
+def _html_jobs_from_text(company: CompanyConfig, source: SourceConfig, endpoint: str, html_text: str, source_name: str) -> list[RawJob]:
+    soup = BeautifulSoup(html_text, "html.parser")
+    jobs = []
+    for link in soup.find_all("a", href=True):
+        text = _clean_text(link.get_text(" "))
+        href = link["href"]
+        if not text or not _looks_like_job_link(text, href):
+            continue
+        url = requests.compat.urljoin(endpoint, href)
+        location = _extract_location(" ".join([text, href]))
+        jobs.append(
+            RawJob(
+                company=company.brand_name,
+                title=text,
+                location=location,
+                url=url,
+                source=source_name,
+                endpoint=endpoint,
+                snippet=text,
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
+            )
+        )
+    return _dedupe_raw(jobs)
 
 
 def _ashby_location(job: dict) -> str:

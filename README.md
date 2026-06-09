@@ -14,6 +14,7 @@ The search now prioritizes direct public company sources instead of DuckDuckGo o
 - SmartRecruiters public API
 - Workday CXS API where reliable
 - Amazon Jobs API
+- Teamtailor, BambooHR, and Personio public job boards where configured
 - Simple public company careers pages
 - Search fallback only when a direct source is unavailable
 
@@ -96,23 +97,30 @@ Every run uploads `job-search-debug-results` with:
 | `data/rejected_results.json` | Rejected jobs with reason, matched keyword, source, URL, and snippet |
 | `data/search_failures.json` | Failed sources with source type, endpoint, error, and HTTP status |
 | `data/duplicates_removed.json` | Accepted-looking duplicate jobs removed before email |
-| `data/source_health.json` | Per-company source health, raw counts, accepted counts, rejected counts, and failures |
+| `data/source_health.json` | Per-company source health, raw counts, accepted/rejected counts, retry counts, failure type, and fallback usage |
 
 Use these artifacts to inspect why a role was accepted or rejected.
 
 ## Filtering
 
-A job is accepted only when it has a score of `10` or more, a relevant Ireland/remote/hybrid location signal, and is not in an excluded role family.
+A job is accepted when it has a score of `12` or more, a relevant Ireland/remote/hybrid location signal, and is not in an excluded role family.
+
+Broad QA/Test/Quality mode is enabled. If the title contains `QA`, `test`, `testing`, `tester`, `quality analyst`, `test analyst`, `QA analyst`, `quality assurance`, `SDET`, or `software test`, the job is included when the location is relevant unless it is clearly a non-software quality role.
 
 Scoring:
 
-- Strong keyword in title: `+10`
-- Strong keyword in description: `+5`
-- Weak keyword in title: `+3`
-- Weak keyword in description only: `+1`
+- Very strong title match: `+15`
+- Broad QA/test/quality title match: `+12`
+- Strong description match: `+5`
 - Ireland/Dublin/Cork/Galway/Limerick/Waterford/Remote Ireland location: `+5`
+- Support engineer/application support title: `+12`
+- Automation/testing tool in title: `+10`
+- Automation/testing tool only in description: `+3`
+- Excluded business role in title: `-20`
+- Pure developer role in title: `-15` unless the title itself includes QA/test/SDET
+- Non-software quality role: `-12`
 
-Weak words such as `quality`, `release`, `incident`, `validation`, `support`, `customer success`, `technical account manager`, and `product enablement` do not pass by themselves. They need strong QA/testing/support context.
+Description-only tool mentions such as `Cypress` or `Postman` do not make pure backend, frontend, full-stack, software engineer, Technical Account Manager, or Customer Success roles pass by themselves.
 
 Accepted role families include:
 
@@ -126,17 +134,34 @@ Accepted role families include:
 
 Clearly unrelated sales, marketing, HR, finance, legal, warehouse, chef, nurse, driver, accountant, product manager, and business development roles are rejected. Pure frontend/backend developer roles are rejected unless the title itself shows testing, QA, support, or validation relevance.
 
-Strong keywords, weak keywords, context words, and exclusions live in `src/filters.py`. Adjust `STRONG_KEYWORDS`, `WEAK_KEYWORDS`, `CONTEXT_KEYWORDS`, and `EXCLUDED_BUSINESS_TERMS` when tuning results.
+Clearly non-software quality roles are rejected with `non_software_quality_role`, including cabling quality, food quality, construction quality, data center construction quality, and supplier quality roles that are hardware/manufacturing-only.
+
+Keyword groups, context words, scoring, and exclusions live in `src/filters.py`. Adjust `VERY_STRONG_TITLE_KEYWORDS`, `BROAD_TITLE_KEYWORDS`, `STRONG_DESCRIPTION_KEYWORDS`, `SUPPORT_ROLE_KEYWORDS`, `TOOL_KEYWORDS`, and exclusion lists when tuning results.
+
+## Fetch Reliability
+
+All source fetches retry temporary failures up to three attempts with 1s, 2s, and 4s backoff.
+
+The retry layer covers:
+
+- HTTP `429`
+- HTTP `500`, `502`, `503`, and `504`
+- request timeouts
+- connection and DNS/network errors
+
+Malformed JSON is recorded as `parsing_failure` instead of crashing the run. If a configured API fails and the company has a careers URL, the workflow tries the careers page as a fallback and records that in `data/source_health.json`.
+
+The email includes a `Job Fetch Reliability Summary` with successful companies, failed companies, partially successful companies, retries performed, timeout/network failures, API failures, parsing failures, and fallback fetches used.
 
 ## Inspect Rejections And Failures
 
 Open the GitHub Actions artifact files:
 
 - `data/rejected_results.json` for rejected titles, score, reason, matched keyword, source type, source quality, URL, and snippet.
-- `data/search_failures.json` for failed source endpoint, error message, and HTTP status.
-- `data/source_health.json` for per-source raw/accepted/rejected counts.
+- `data/search_failures.json` for failed source endpoint, error message, error type, retry count, timestamp, and HTTP status.
+- `data/source_health.json` for per-source raw/accepted/rejected counts, retry count, error type, and fallback usage.
 
-Common rejection reasons include `weak_description_only_keyword`, `generic_quality_role_not_software_testing`, `customer_success_not_support_engineering`, `technical_account_manager_not_qa`, `manager_business_role`, `security_role_not_qa`, `network_cabling_quality_role`, `location_mismatch`, `pure_developer_without_testing_support`, `excluded_sales_marketing_finance_hr_legal`, and `keyword_mismatch`.
+Common rejection reasons include `weak_description_only_keyword`, `non_software_quality_role`, `customer_success_not_support_engineering`, `technical_account_manager_not_qa`, `manager_business_role`, `security_role_not_qa`, `location_mismatch`, `pure_developer_without_testing_support`, `excluded_sales_marketing_finance_hr_legal`, and `keyword_mismatch`.
 
 ## Duplicate Prevention
 

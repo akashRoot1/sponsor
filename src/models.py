@@ -89,6 +89,9 @@ class SearchFailure:
     endpoint: str
     error: str
     http_status: int | None = None
+    error_type: str = "api_failure"
+    retry_count: int = 0
+    timestamp: str = ""
 
 
 @dataclass
@@ -103,6 +106,12 @@ class SourceStats:
     rejected_jobs: int = 0
     failed: bool = False
     error: str = ""
+    error_type: str = ""
+    retries_performed: int = 0
+    api_failures: int = 0
+    parsing_failures: int = 0
+    timeout_failures: int = 0
+    fallback_used: bool = False
 
 
 @dataclass
@@ -149,12 +158,36 @@ class SearchReport:
         return sum(1 for company in self.companies if company.had_failure)
 
     @property
+    def partially_successful_company_count(self) -> int:
+        return sum(1 for company in self.companies if company.searched_successfully and company.had_failure)
+
+    @property
     def no_job_company_count(self) -> int:
         return sum(1 for company in self.companies if company.searched_successfully and not company.had_failure and not company.accepted_jobs)
 
     @property
     def source_health(self) -> list[SourceStats]:
         return [stats for company in self.companies for stats in company.source_stats]
+
+    @property
+    def retries_performed(self) -> int:
+        return sum(stats.retries_performed for stats in self.source_health)
+
+    @property
+    def api_failure_count(self) -> int:
+        return sum(stats.api_failures for stats in self.source_health)
+
+    @property
+    def parsing_failure_count(self) -> int:
+        return sum(stats.parsing_failures for stats in self.source_health)
+
+    @property
+    def timeout_failure_count(self) -> int:
+        return sum(stats.timeout_failures for stats in self.source_health)
+
+    @property
+    def fallback_fetch_count(self) -> int:
+        return sum(1 for stats in self.source_health if stats.fallback_used)
 
     def artifacts(self) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
         return (

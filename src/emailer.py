@@ -12,11 +12,12 @@ from models import JobResult, SearchReport
 
 SUBJECT = "Daily Sponsor-Friendly QA/SDET Job Links - Ireland"
 CATEGORY_ORDER = [
-    "Best matches - apply first",
-    "Production/Application Support roles",
-    "Performance / API Testing roles",
-    "Validation / CSV roles",
-    "Maybe relevant - review manually",
+    "Apply First - Best QA/Test Matches",
+    "QA / Test / Quality Broad Matches",
+    "Production/Application Support Roles",
+    "API / Performance / Automation Tool Matches",
+    "Validation / CSV Roles",
+    "Maybe Relevant - Review Manually",
 ]
 
 
@@ -40,7 +41,10 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
     if report.failures:
         lines.extend(["", "Search completed with failures, so results may be incomplete."])
 
-    apply_first = [job for job in jobs if job.category == "Best matches - apply first"]
+    lines.extend(["", "Broad QA/Test/Quality mode is enabled: jobs with QA, test, testing, tester, quality analyst, test analyst, quality assurance, or software test in the title are included when location is relevant."])
+    lines.extend(_reliability_lines(report))
+
+    apply_first = [job for job in jobs if job.category == "Apply First - Best QA/Test Matches"]
     if apply_first:
         lines.extend(["", "Apply First:"])
         for index, job in enumerate(apply_first[:10], start=1):
@@ -61,6 +65,7 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
                         f"  Source: {job.source}",
                         f"  Source type: {job.source_type}",
                         f"  Source quality: {job.source_quality}",
+                        f"  Fetch method: {_fetch_method(job)}",
                         f"  Reason accepted: {job.accepted_reason}",
                         f"  Date found: {job.date_found}",
                         f"  Link: {job.url}",
@@ -81,7 +86,7 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
 
 def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datetime, test_mode: bool) -> str:
     warning = "<p><strong>Search completed with failures, so results may be incomplete.</strong></p>" if report.failures else ""
-    apply_first = [job for job in jobs if job.category == "Best matches - apply first"]
+    apply_first = [job for job in jobs if job.category == "Apply First - Best QA/Test Matches"]
     apply_first_html = ""
     if apply_first:
         apply_first_items = [
@@ -107,6 +112,7 @@ def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datet
                       <strong>Source:</strong> {html.escape(job.source)}<br>
                       <strong>Source type:</strong> {html.escape(job.source_type)}<br>
                       <strong>Source quality:</strong> {html.escape(job.source_quality)}<br>
+                      <strong>Fetch method:</strong> {html.escape(_fetch_method(job))}<br>
                       <strong>Reason accepted:</strong> {html.escape(job.accepted_reason)}<br>
                       <strong>Date found:</strong> {html.escape(job.date_found)}
                     </li>
@@ -123,6 +129,8 @@ def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datet
       <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #222;">
         <h1>{'[TEST] ' if test_mode else ''}Daily Sponsor-Friendly QA/SDET Job Links - Ireland</h1>
         {_summary_html(jobs, report, generated_at)}
+        <p>Broad QA/Test/Quality mode is enabled: jobs with QA, test, testing, tester, quality analyst, test analyst, quality assurance, or software test in the title are included when location is relevant.</p>
+        {_reliability_html(report)}
         {warning}
         {apply_first_html}
         {jobs_html}
@@ -140,10 +148,12 @@ def _summary_lines(jobs: list[JobResult], report: SearchReport, generated_at: da
         f"Total new matching jobs: {len(jobs)}",
         f"Companies searched successfully: {report.successful_company_count}",
         f"Companies failed: {report.failed_company_count}",
+        f"Companies partially successful: {report.partially_successful_company_count}",
         f"Raw jobs found: {len(report.raw_jobs)}",
         f"Accepted jobs: {len(report.jobs)}",
         f"Rejected jobs: {len(report.rejected_jobs)}",
         f"Duplicates removed: {len(report.duplicates_removed)}",
+        f"Retries performed: {report.retries_performed}",
         f"Generated: {generated_at.strftime('%Y-%m-%d %H:%M %Z')} Europe/Dublin",
     ]
 
@@ -153,22 +163,53 @@ def _summary_html(jobs: list[JobResult], report: SearchReport, generated_at: dat
         ("Total new matching jobs", len(jobs)),
         ("Companies searched successfully", report.successful_company_count),
         ("Companies failed", report.failed_company_count),
+        ("Companies partially successful", report.partially_successful_company_count),
         ("Raw jobs found", len(report.raw_jobs)),
         ("Accepted jobs", len(report.jobs)),
         ("Rejected jobs", len(report.rejected_jobs)),
         ("Duplicates removed", len(report.duplicates_removed)),
+        ("Retries performed", report.retries_performed),
         ("Generated", f"{generated_at.strftime('%Y-%m-%d %H:%M %Z')} Europe/Dublin"),
     ]
     return "<ul>" + "".join(f"<li><strong>{html.escape(str(label))}:</strong> {html.escape(str(value))}</li>" for label, value in rows) + "</ul>"
 
 
+def _reliability_lines(report: SearchReport) -> list[str]:
+    return [
+        "",
+        "Job Fetch Reliability Summary",
+        f"- Successful companies: {report.successful_company_count}",
+        f"- Failed companies: {report.failed_company_count}",
+        f"- Partially successful companies: {report.partially_successful_company_count}",
+        f"- Retries performed: {report.retries_performed}",
+        f"- Timeout/network failures: {report.timeout_failure_count}",
+        f"- API failures: {report.api_failure_count}",
+        f"- Parsing failures: {report.parsing_failure_count}",
+        f"- Fallback fetches used: {report.fallback_fetch_count}",
+    ]
+
+
+def _reliability_html(report: SearchReport) -> str:
+    rows = [
+        ("Successful companies", report.successful_company_count),
+        ("Failed companies", report.failed_company_count),
+        ("Partially successful companies", report.partially_successful_company_count),
+        ("Retries performed", report.retries_performed),
+        ("Timeout/network failures", report.timeout_failure_count),
+        ("API failures", report.api_failure_count),
+        ("Parsing failures", report.parsing_failure_count),
+        ("Fallback fetches used", report.fallback_fetch_count),
+    ]
+    return "<h2>Job Fetch Reliability Summary</h2><ul>" + "".join(f"<li><strong>{html.escape(label)}:</strong> {value}</li>" for label, value in rows) + "</ul>"
+
+
 def _failure_lines(report: SearchReport) -> list[str]:
     if not report.failures:
         return []
-    lines = ["", "Failed sources"]
+    lines = ["", "Failed Companies"]
     for failure in report.failures[:25]:
         status = f" status={failure.http_status}" if failure.http_status else ""
-        lines.append(f"- {failure.company} | {failure.source_type}{status} | {failure.error} | {failure.endpoint}")
+        lines.append(f"- {failure.company} | {failure.source_type}{status} | type={failure.error_type} | retries={failure.retry_count} | {failure.error} | {failure.endpoint}")
     if len(report.failures) > 25:
         lines.append(f"...and {len(report.failures) - 25} more failures. See data/search_failures.json.")
     return lines
@@ -180,10 +221,10 @@ def _failures_html(report: SearchReport) -> str:
     items = []
     for failure in report.failures[:25]:
         status = f" status={failure.http_status}" if failure.http_status else ""
-        items.append(f"<li>{html.escape(failure.company)} | {html.escape(failure.source_type)}{html.escape(status)} | {html.escape(failure.error)}<br><small>{html.escape(failure.endpoint)}</small></li>")
+        items.append(f"<li>{html.escape(failure.company)} | {html.escape(failure.source_type)}{html.escape(status)} | type={html.escape(failure.error_type)} | retries={failure.retry_count} | {html.escape(failure.error)}<br><small>{html.escape(failure.endpoint)}</small></li>")
     if len(report.failures) > 25:
         items.append(f"<li>...and {len(report.failures) - 25} more failures. See artifacts.</li>")
-    return f"<h2>Failed sources</h2><ul>{''.join(items)}</ul>"
+    return f"<h2>Failed Companies</h2><ul>{''.join(items)}</ul>"
 
 
 def _rejected_lines(report: SearchReport) -> list[str]:
@@ -216,3 +257,11 @@ def _group_by_category(jobs: list[JobResult]) -> dict[str, list[JobResult]]:
     for job in sorted(jobs, key=lambda item: (CATEGORY_ORDER.index(item.category) if item.category in CATEGORY_ORDER else 99, item.company, item.title)):
         grouped[job.category].append(job)
     return {category: grouped[category] for category in CATEGORY_ORDER if grouped.get(category)}
+
+
+def _fetch_method(job: JobResult) -> str:
+    if job.source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio"}:
+        return "API"
+    if job.source_type in {"company_careers", "fallback_search"}:
+        return "fallback" if job.source_type == "fallback_search" else "careers page"
+    return job.source_quality or "unknown"
