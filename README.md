@@ -14,7 +14,7 @@ The search now prioritizes direct public company sources instead of DuckDuckGo o
 - SmartRecruiters public API
 - Workday CXS API where reliable
 - Amazon Jobs API
-- Teamtailor, BambooHR, Personio, and Attrax public job boards where configured
+- Teamtailor, BambooHR, Personio, Attrax, Phenom, and SuccessFactors public job boards where configured
 - Simple public company careers pages
 - Search fallback only when a direct source is unavailable
 
@@ -209,7 +209,11 @@ company(
 
 Supported source types are implemented in `src/sources.py`.
 
-AbbVie is configured through the `attrax` source at `https://careers.abbvie.com/en/jobs`, which captures result cards such as `Quality Engineer` in `Sligo, SO`.
+Examples of stronger direct sources now configured:
+
+- AbbVie uses `attrax` at `https://careers.abbvie.com/en/jobs`, which captures result cards such as `Quality Engineer` in `Sligo, SO`.
+- SAP and Boston Scientific use `successfactors`, which captures server-rendered job result rows.
+- Fiserv, Eli Lilly, and MSD use `phenom`, which queries the public `/widgets` job endpoint instead of scraping a JavaScript landing page.
 
 ## Add Keywords
 

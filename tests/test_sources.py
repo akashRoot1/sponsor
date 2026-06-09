@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import search_jobs
 from models import CompanyConfig, RawJob, SourceConfig
-from sources import SourceError, _json_response, attrax_jobs, request_with_retries
+from sources import SourceError, _json_response, attrax_jobs, company_careers_jobs, phenom_jobs, request_with_retries, successfactors_jobs
 
 
 class FakeResponse:
@@ -139,3 +139,62 @@ def test_attrax_parser_captures_abbvie_quality_engineer_card() -> None:
     assert jobs[0].title == "Quality Engineer"
     assert jobs[0].location == "Sligo, SO"
     assert jobs[0].url == "https://careers.abbvie.com/en/job/quality-engineer-in-sligo-so-jid-24893"
+
+
+def test_successfactors_parser_captures_ireland_support_role() -> None:
+    html = """
+    <table>
+      <tr class="data-row">
+        <td><a class="jobTitle-link" href="/job/Dublin-24-Senior-Technical-Support-Engineer-D24WA02/1285411901/">Senior Technical Support Engineer</a></td>
+        <td>Dublin 24, IE, D24WA02</td>
+        <td>Customer Support</td>
+      </tr>
+    </table>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://jobs.sap.com/search/?q=support&locationsearch=Ireland")])
+    company = CompanyConfig("SAP Ireland Limited", "SAP", ["SAP"], sources=[SourceConfig("successfactors", endpoint="https://jobs.sap.com/search/")])
+    jobs = successfactors_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Senior Technical Support Engineer"
+    assert jobs[0].location == "Dublin"
+    assert jobs[0].url == "https://jobs.sap.com/job/Dublin-24-Senior-Technical-Support-Engineer-D24WA02/1285411901/"
+
+
+def test_generic_company_careers_derives_title_from_job_slug_when_link_text_is_generic() -> None:
+    html = """
+    <article>
+      <h3>Quality Engineer</h3>
+      <p>Sligo, Ireland Hybrid</p>
+      <a href="/en/job/quality-engineer-in-sligo-so-jid-24893">Learn more</a>
+    </article>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://example.com/careers")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("company_careers", endpoint="https://example.com/careers")])
+    jobs = company_careers_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Quality Engineer"
+    assert jobs[0].location == "Sligo"
+
+
+def test_phenom_parser_captures_ireland_quality_role() -> None:
+    payload = {
+        "refineSearch": {
+            "status": 200,
+            "data": {
+                "jobs": [
+                    {
+                        "title": "QA Specialist",
+                        "location": "Cork, Ireland",
+                        "applyUrl": "https://example.wd5.myworkdayjobs.com/job/Cork/QA-Specialist_R-1/apply",
+                        "descriptionTeaser": "GMP quality assurance and batch release support.",
+                        "type": "Full Time",
+                        "category": "Manufacturing/Quality",
+                    }
+                ]
+            },
+        }
+    }
+    session = FakeSession([FakeResponse(200, payload=payload, url="https://careers.example.com/widgets")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("phenom", endpoint="https://careers.example.com/widgets")])
+    jobs = phenom_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "QA Specialist"
+    assert jobs[0].location == "Cork, Ireland"
+    assert jobs[0].url == "https://example.wd5.myworkdayjobs.com/job/Cork/QA-Specialist_R-1/apply"
