@@ -1,0 +1,45 @@
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+from pathlib import Path
+
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+DATA_DIR = ROOT_DIR / "data"
+SEEN_JOBS_PATH = DATA_DIR / "seen_jobs.json"
+DUBLIN_TIMEZONE = "Europe/Dublin"
+DEFAULT_EMAIL_TO = "akashvikram98@gmail.com"
+
+
+@dataclass(frozen=True)
+class EmailConfig:
+    smtp_host: str
+    smtp_port: int
+    smtp_user: str
+    smtp_password: str
+    email_from: str
+    email_to: str
+
+
+def get_email_config() -> EmailConfig:
+    missing = [
+        name
+        for name in ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "EMAIL_FROM"]
+        if not os.getenv(name)
+    ]
+    if missing:
+        raise RuntimeError(f"Missing required email environment variables: {', '.join(missing)}")
+
+    return EmailConfig(
+        smtp_host=os.environ["SMTP_HOST"],
+        smtp_port=int(os.environ["SMTP_PORT"]),
+        smtp_user=os.environ["SMTP_USER"],
+        smtp_password=os.environ["SMTP_PASSWORD"],
+        email_from=os.environ["EMAIL_FROM"],
+        email_to=os.getenv("EMAIL_TO") or DEFAULT_EMAIL_TO,
+    )
+
+
+def force_run_enabled() -> bool:
+    return os.getenv("FORCE_RUN", "").strip().lower() in {"1", "true", "yes", "y"}
