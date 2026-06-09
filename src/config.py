@@ -8,6 +8,9 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT_DIR / "data"
 SEEN_JOBS_PATH = DATA_DIR / "seen_jobs.json"
+RAW_RESULTS_PATH = DATA_DIR / "raw_results.json"
+FILTERED_RESULTS_PATH = DATA_DIR / "filtered_results.json"
+SEARCH_FAILURES_PATH = DATA_DIR / "search_failures.json"
 DUBLIN_TIMEZONE = "Europe/Dublin"
 DEFAULT_EMAIL_TO = "akashvikram98@gmail.com"
 
@@ -43,3 +46,7 @@ def get_email_config() -> EmailConfig:
 
 def force_run_enabled() -> bool:
     return os.getenv("FORCE_RUN", "").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def test_mode_enabled() -> bool:
+    return os.getenv("TEST_MODE", "").strip().lower() in {"1", "true", "yes", "y"}

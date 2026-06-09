@@ -39,8 +39,47 @@ In GitHub:
 1. Open `Actions`.
 2. Select `Daily Sponsor-Friendly QA/SDET Job Links`.
 3. Choose `Run workflow`.
+4. Leave `test_mode` as `false` for a normal full run.
 
 Manual runs bypass the 5 AM Ireland time gate so you can test immediately.
+
+## Run Test Mode
+
+Use test mode when you want a fast diagnostic email and debug artifacts.
+
+1. Open `Actions`.
+2. Select `Daily Sponsor-Friendly QA/SDET Job Links`.
+3. Choose `Run workflow`.
+4. Set `test_mode` to `true`.
+
+Test mode searches only these companies:
+
+- Stripe
+- Workday
+- Amazon / AWS
+- Mastercard
+- Version 1
+
+Test mode sends the email with debug details and uploads artifacts, but it does not update `data/seen_jobs.json`.
+
+## Inspect Debug Artifacts
+
+Every workflow run uploads an artifact named `job-search-debug-results`.
+
+To inspect it:
+
+1. Open the completed workflow run.
+2. Scroll to `Artifacts`.
+3. Download `job-search-debug-results`.
+4. Open:
+
+| File | Purpose |
+| --- | --- |
+| `data/raw_results.json` | All raw public jobs/pages found before filtering |
+| `data/filtered_results.json` | Jobs that passed keyword, location, and source filtering |
+| `data/search_failures.json` | Sources that failed, timed out, or returned errors |
+
+The email also includes failed sources and top rejected job/page titles, so a zero-job email should not be treated as certain if failures occurred.
 
 ## Run Locally
 
@@ -79,9 +118,15 @@ The `ROLE_KEYWORDS` list controls the role matching terms. The filtering logic a
 
 Previously emailed job URLs are stored in `data/seen_jobs.json`. The workflow commits updates to this file after every successful run, so the next email only includes new matching jobs.
 
+Only jobs that pass all filters and are included in the email are marked as seen. Raw jobs or rejected jobs are not marked as seen.
+
 If there are no new jobs, the email says:
 
 > No new matching sponsor-friendly QA/SDET jobs found today.
+
+If any source fails, the email also says:
+
+> Search completed with failures, so results may be incomplete.
 
 ## Limitations
 
@@ -89,4 +134,3 @@ If there are no new jobs, the email says:
 - Some company career portals may block search engines or hide jobs behind JavaScript.
 - The automation uses polite delays and a clear user-agent, so it intentionally avoids aggressive crawling.
 - Search engines and ATS pages can change their HTML, so parsing may need occasional maintenance.
-

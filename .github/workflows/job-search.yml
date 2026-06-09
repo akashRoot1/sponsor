@@ -5,6 +5,15 @@ on:
     - cron: "0 4 * * *"
     - cron: "0 5 * * *"
   workflow_dispatch:
+    inputs:
+      test_mode:
+        description: "Run only Stripe, Workday, Amazon, Mastercard, and Version 1 with debug details"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
 
 permissions:
   contents: write
@@ -34,10 +43,22 @@ jobs:
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           FORCE_RUN: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_mode || 'false' }}
         run: python src/main.py
 
-      - name: Commit updated seen jobs
+      - name: Upload search debug artifacts
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: job-search-debug-results
+          path: |
+            data/raw_results.json
+            data/filtered_results.json
+            data/search_failures.json
+          if-no-files-found: warn
+
+      - name: Commit updated seen jobs
+        if: always() && inputs.test_mode != 'true'
         run: |
           if git diff --quiet -- data/seen_jobs.json; then
             echo "No seen job changes to commit."
