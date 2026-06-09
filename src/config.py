@@ -11,6 +11,7 @@ SEEN_JOBS_PATH = DATA_DIR / "seen_jobs.json"
 RAW_RESULTS_PATH = DATA_DIR / "raw_results.json"
 FILTERED_RESULTS_PATH = DATA_DIR / "filtered_results.json"
 SEARCH_FAILURES_PATH = DATA_DIR / "search_failures.json"
+REJECTED_RESULTS_PATH = DATA_DIR / "rejected_results.json"
 DUBLIN_TIMEZONE = "Europe/Dublin"
 DEFAULT_EMAIL_TO = "akashvikram98@gmail.com"
 
@@ -50,3 +51,22 @@ def force_run_enabled() -> bool:
 
 def test_mode_enabled() -> bool:
     return os.getenv("TEST_MODE", "").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def send_email_enabled() -> bool:
+    return os.getenv("SEND_EMAIL", "true").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def update_seen_enabled() -> bool:
+    return os.getenv("UPDATE_SEEN", "true").strip().lower() in {"1", "true", "yes", "y"}
+
+
+def max_companies() -> int | None:
+    raw_value = os.getenv("MAX_COMPANIES", "").strip()
+    if not raw_value:
+        return None
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise RuntimeError("MAX_COMPANIES must be a number if provided.") from exc
+    return value if value > 0 else None

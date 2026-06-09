@@ -1,136 +1,191 @@
 # Sponsor-Friendly QA/SDET Job Alerts
 
-This repository runs a GitHub Actions automation that searches for public, direct job links from sponsor-friendly Ireland employers and emails matching QA / SDET / automation / testing roles to `akashvikram98@gmail.com`.
+This repository runs a GitHub Actions workflow that searches public job boards and company career sources for sponsor-friendly Ireland companies, then emails direct job links to `akashvikram98@gmail.com`.
 
-The tool only collects public job posting links. It does not apply to jobs, log in to websites, scrape private pages, or collect personal data.
+It only collects public job links. It never applies automatically, never logs in to sites, and does not collect personal data.
 
-## How The Scheduler Works
+## How It Searches
 
-GitHub Actions cron uses UTC, while Ireland switches between GMT and Irish Standard Time. The workflow runs at both possible UTC times:
+The search now prioritizes direct public company sources instead of DuckDuckGo or Bing:
 
-- `04:00 UTC`, which is `05:00 Europe/Dublin` during Irish Standard Time
-- `05:00 UTC`, which is `05:00 Europe/Dublin` during GMT
+- Greenhouse public API
+- Lever public API
+- Ashby public API
+- SmartRecruiters public API
+- Workday CXS API where reliable
+- Amazon Jobs API
+- Simple public company careers pages
+- Search fallback only when a direct source is unavailable
 
-The Python app then checks `Europe/Dublin` with `zoneinfo` and only sends the scheduled email when the local hour is exactly `05:00`. Manual runs skip this gate.
+Direct APIs are better than DuckDuckGo/Bing because they return actual job records with titles, URLs, locations, and work types. Search engines often return homepages, login pages, Wikipedia, support pages, app stores, or HTTP challenge pages.
 
-## GitHub Secrets
+## Cubic Telecom
 
-Add these secrets in GitHub:
+Cubic Telecom / Cubic³ is configured as a priority company using the direct Ashby board:
 
-1. Open `akashRoot1/sponsor` on GitHub.
-2. Go to `Settings` -> `Secrets and variables` -> `Actions`.
-3. Add these repository secrets:
+`https://api.ashbyhq.com/posting-api/job-board/cubic3?includeCompensation=true`
 
-| Secret | Required | Example |
+This source captures jobs such as:
+
+- `Test Support Engineer (Maternity Cover)` in Dublin / Remote
+- `Senior Test Automation Engineer` in Dublin / Hybrid
+- `Test Automation Engineer` in Dublin / Hybrid
+
+## Scheduler
+
+GitHub cron runs in UTC. The workflow runs at both possible UTC times for 5 AM Ireland:
+
+- `04:00 UTC`
+- `05:00 UTC`
+
+Python checks `Europe/Dublin` with `zoneinfo` and only proceeds when local Irish time is `05:00`. Manual runs bypass this gate.
+
+## Manual Runs
+
+Open the repository on GitHub:
+
+1. Go to `Actions`.
+2. Select `Daily Sponsor-Friendly QA/SDET Job Links`.
+3. Click `Run workflow`.
+4. Choose inputs:
+
+| Input | Meaning |
+| --- | --- |
+| `test_mode` | Searches only priority companies: Cubic Telecom, Stripe, Workday, Amazon, Mastercard, Version 1, Accenture, Fiserv, PayPal, Guidewire |
+| `send_email` | Sends or skips the email |
+| `update_seen` | Updates `data/seen_jobs.json` only after a successful email |
+| `max_companies` | Optional number of companies to search |
+
+To test Cubic specifically, run with:
+
+- `test_mode=true`
+- `send_email=true`
+- `update_seen=false`
+- `max_companies=1`
+
+Cubic is first in the priority list.
+
+## Email Setup
+
+Add these GitHub Actions secrets:
+
+| Secret | Required | Gmail example |
 | --- | --- | --- |
 | `SMTP_HOST` | Yes | `smtp.gmail.com` |
 | `SMTP_PORT` | Yes | `587` |
-| `SMTP_USER` | Yes | your SMTP username |
-| `SMTP_PASSWORD` | Yes | your SMTP password or app password |
-| `EMAIL_FROM` | Yes | sender email address |
-| `EMAIL_TO` | No | defaults to `akashvikram98@gmail.com` |
+| `SMTP_USER` | Yes | `akashvikram98@gmail.com` |
+| `SMTP_PASSWORD` | Yes | Gmail App Password |
+| `EMAIL_FROM` | Yes | `akashvikram98@gmail.com` |
+| `EMAIL_TO` | Yes | `akashvikram98@gmail.com` |
 
-For Gmail, use an app password rather than your normal account password.
+For Gmail, `SMTP_PASSWORD` must be a Gmail App Password, not your normal Gmail password.
 
-## Run Manually
+If a required email secret is missing and `send_email=true`, the workflow fails clearly and lists the missing environment variable names.
 
-In GitHub:
+## Artifacts
 
-1. Open `Actions`.
-2. Select `Daily Sponsor-Friendly QA/SDET Job Links`.
-3. Choose `Run workflow`.
-4. Leave `test_mode` as `false` for a normal full run.
-
-Manual runs bypass the 5 AM Ireland time gate so you can test immediately.
-
-## Run Test Mode
-
-Use test mode when you want a fast diagnostic email and debug artifacts.
-
-1. Open `Actions`.
-2. Select `Daily Sponsor-Friendly QA/SDET Job Links`.
-3. Choose `Run workflow`.
-4. Set `test_mode` to `true`.
-
-Test mode searches only these companies:
-
-- Stripe
-- Workday
-- Amazon / AWS
-- Mastercard
-- Version 1
-
-Test mode sends the email with debug details and uploads artifacts, but it does not update `data/seen_jobs.json`.
-
-## Inspect Debug Artifacts
-
-Every workflow run uploads an artifact named `job-search-debug-results`.
-
-To inspect it:
-
-1. Open the completed workflow run.
-2. Scroll to `Artifacts`.
-3. Download `job-search-debug-results`.
-4. Open:
+Every run uploads `job-search-debug-results` with:
 
 | File | Purpose |
 | --- | --- |
-| `data/raw_results.json` | All raw public jobs/pages found before filtering |
-| `data/filtered_results.json` | Jobs that passed keyword, location, and source filtering |
-| `data/search_failures.json` | Sources that failed, timed out, or returned errors |
+| `data/raw_results.json` | Raw public jobs collected before filtering |
+| `data/filtered_results.json` | Accepted matching jobs |
+| `data/rejected_results.json` | Rejected jobs with reason, matched keyword, source, URL, and snippet |
+| `data/search_failures.json` | Failed sources with source type, endpoint, error, and HTTP status |
 
-The email also includes failed sources and top rejected job/page titles, so a zero-job email should not be treated as certain if failures occurred.
+Use these artifacts to inspect why a role was accepted or rejected.
 
-## Run Locally
+## Filtering
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-FORCE_RUN=true python src/main.py
-```
+A job is accepted when it has relevant QA/testing/support/validation language and a relevant Ireland/remote/hybrid location signal.
 
-On Windows PowerShell:
+Accepted role families include:
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:FORCE_RUN = "true"
-python src/main.py
-```
+- QA Automation, QA Engineer, Quality Engineer, Quality Assurance
+- SDET, Software Development Engineer in Test, Software Engineer in Test
+- Test Engineer, Software Test Engineer, Test Analyst, Test Automation
+- API Testing, Performance Testing, JMeter, Postman, Rest Assured
+- Application Support Engineer, Production Support Engineer, Test Support Engineer
+- Technical Support Engineer, L2/L3 Support, Incident Management
+- Validation Engineer, Computer System Validation, CSV roles
 
-SMTP environment variables are required for sending email.
-
-## Add Or Remove Companies
-
-Edit `src/companies.py`.
-
-The `COMPANIES` list is the initial sponsor-friendly target list. Add, remove, or rename companies there.
-
-## Add Or Remove Keywords
-
-Edit `src/companies.py`.
-
-The `ROLE_KEYWORDS` list controls the role matching terms. The filtering logic also contains broader QA/testing inclusion terms and unrelated-role exclusion terms in `src/search_jobs.py`.
+Clearly unrelated sales, marketing, HR, finance, legal, warehouse, chef, nurse, driver, accountant, product manager, and business development roles are rejected. Pure frontend/backend developer roles are rejected unless the title itself shows testing, QA, support, or validation relevance.
 
 ## Duplicate Prevention
 
-Previously emailed job URLs are stored in `data/seen_jobs.json`. The workflow commits updates to this file after every successful run, so the next email only includes new matching jobs.
+`data/seen_jobs.json` stores stable job IDs derived from:
 
-Only jobs that pass all filters and are included in the email are marked as seen. Raw jobs or rejected jobs are not marked as seen.
+- company
+- title
+- location
+- URL
 
-If there are no new jobs, the email says:
+A job is marked seen only after:
 
-> No new matching sponsor-friendly QA/SDET jobs found today.
+- it passed filters
+- it was included in the email
+- the email was successfully sent
+- `update_seen=true`
 
-If any source fails, the email also says:
+Rejected jobs and raw jobs are never marked as seen.
 
-> Search completed with failures, so results may be incomplete.
+## Add Companies Or Sources
+
+Edit `src/companies.py`.
+
+Each company has:
+
+- legal company name
+- short brand name
+- aliases
+- careers URL
+- source configs
+- priority flag
+
+Example:
+
+```python
+company(
+    "Cubic Telecom Limited",
+    "Cubic Telecom",
+    ["Cubic Telecom", "Cubic³", "Cubic"],
+    "https://www.cubic3.com/careers",
+    [source("ashby", slug="cubic3")],
+    True,
+)
+```
+
+Supported source types are implemented in `src/sources.py`.
+
+## Add Keywords
+
+Edit `src/filters.py`.
+
+Use `ROLE_KEYWORDS`, `GENERAL_RELEVANT_TERMS`, `IRELAND_LOCATION_TERMS`, and `EXCLUDED_TERMS`.
+
+## Local Test
+
+```powershell
+pip install -r requirements.txt
+$env:PYTEST_DISABLE_PLUGIN_AUTOLOAD = "1"
+python -m pytest -q
+```
+
+Run a manual script with email disabled:
+
+```powershell
+$env:FORCE_RUN = "true"
+$env:TEST_MODE = "true"
+$env:SEND_EMAIL = "false"
+$env:UPDATE_SEEN = "false"
+$env:MAX_COMPANIES = "1"
+python src/main.py
+```
 
 ## Limitations
 
-- Search results depend on public pages discoverable without login.
-- Some company career portals may block search engines or hide jobs behind JavaScript.
-- The automation uses polite delays and a clear user-agent, so it intentionally avoids aggressive crawling.
-- Search engines and ATS pages can change their HTML, so parsing may need occasional maintenance.
+- Some company career pages are JavaScript-heavy and may expose little useful HTML.
+- Workday endpoints differ by tenant and can change.
+- Search fallback is intentionally low priority and filters out generic search results.
+- If many sources fail, the email warns: `Search completed with failures, so results may be incomplete.`
+

@@ -7,13 +7,33 @@ on:
   workflow_dispatch:
     inputs:
       test_mode:
-        description: "Run only Stripe, Workday, Amazon, Mastercard, and Version 1 with debug details"
+        description: "Run only priority companies with debug details"
         required: false
         default: "false"
         type: choice
         options:
           - "false"
           - "true"
+      send_email:
+        description: "Send the result email"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      update_seen:
+        description: "Update seen_jobs.json after successful email"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+      max_companies:
+        description: "Optional maximum number of companies to search"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -34,6 +54,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Run tests
+        env:
+          PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+        run: pytest -q
+
       - name: Search jobs and send email
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -44,6 +69,9 @@ jobs:
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           FORCE_RUN: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
           TEST_MODE: ${{ github.event_name == 'workflow_dispatch' && inputs.test_mode || 'false' }}
+          SEND_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.send_email || 'true' }}
+          UPDATE_SEEN: ${{ github.event_name == 'workflow_dispatch' && inputs.update_seen || 'true' }}
+          MAX_COMPANIES: ${{ github.event_name == 'workflow_dispatch' && inputs.max_companies || '' }}
         run: python src/main.py
 
       - name: Upload search debug artifacts
@@ -54,11 +82,12 @@ jobs:
           path: |
             data/raw_results.json
             data/filtered_results.json
+            data/rejected_results.json
             data/search_failures.json
           if-no-files-found: warn
 
       - name: Commit updated seen jobs
-        if: always() && inputs.test_mode != 'true'
+        if: always() && (github.event_name != 'workflow_dispatch' || inputs.update_seen == 'true')
         run: |
           if git diff --quiet -- data/seen_jobs.json; then
             echo "No seen job changes to commit."

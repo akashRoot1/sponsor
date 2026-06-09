@@ -4,19 +4,23 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from companies import COMPANIES, ROLE_KEYWORDS
+from companies import COMPANIES, TEST_MODE_COMPANIES
 from config import (
     DUBLIN_TIMEZONE,
     FILTERED_RESULTS_PATH,
     RAW_RESULTS_PATH,
+    REJECTED_RESULTS_PATH,
     SEARCH_FAILURES_PATH,
     SEEN_JOBS_PATH,
     force_run_enabled,
     get_email_config,
+    max_companies,
+    send_email_enabled,
     test_mode_enabled,
+    update_seen_enabled,
 )
 from emailer import send_job_email
-from search_jobs import TEST_MODE_COMPANIES, find_jobs
+from search_jobs import find_jobs
 from storage import load_seen_jobs, save_json, save_seen_jobs
 
 
@@ -27,44 +31,65 @@ LOGGER = logging.getLogger(__name__)
 def main() -> None:
     generated_at = datetime.now(ZoneInfo(DUBLIN_TIMEZONE))
     test_mode = test_mode_enabled()
+    should_send_email = send_email_enabled()
+    should_update_seen = update_seen_enabled()
 
     if not _should_run_now(generated_at):
         LOGGER.info("Skipping run because local Europe/Dublin time is %s.", generated_at.strftime("%H:%M"))
         return
 
-    target_companies = [company for company in COMPANIES if company in TEST_MODE_COMPANIES] if test_mode else COMPANIES
-    LOGGER.info("Starting job search at %s. test_mode=%s companies=%s", generated_at.isoformat(), test_mode, len(target_companies))
+    target_companies = list(TEST_MODE_COMPANIES if test_mode else COMPANIES)
+    limit = max_companies()
+    if limit:
+        target_companies = target_companies[:limit]
 
-    seen_urls = load_seen_jobs(SEEN_JOBS_PATH)
-    report = find_jobs(target_companies, ROLE_KEYWORDS, generated_at)
+    LOGGER.info(
+        "Starting job search generated_at=%s test_mode=%s send_email=%s update_seen=%s companies=%s",
+        generated_at.isoformat(),
+        test_mode,
+        should_send_email,
+        should_update_seen,
+        len(target_companies),
+    )
+
+    seen_ids = load_seen_jobs(SEEN_JOBS_PATH)
+    report = find_jobs(target_companies, generated_at)
     all_jobs = report.jobs
-    new_jobs = [job for job in all_jobs if job.url not in seen_urls]
+    new_jobs = [job for job in all_jobs if job.unique_id not in seen_ids]
+    duplicate_jobs = [job for job in all_jobs if job.unique_id in seen_ids]
 
-    raw_results, filtered_results, search_failures = report.to_artifacts()
+    raw_results, filtered_results, rejected_results, search_failures = report.artifacts()
     save_json(RAW_RESULTS_PATH, raw_results)
     save_json(FILTERED_RESULTS_PATH, filtered_results)
+    save_json(REJECTED_RESULTS_PATH, rejected_results)
     save_json(SEARCH_FAILURES_PATH, search_failures)
 
     LOGGER.info(
-        "Found %s matching jobs, %s new. successful_companies=%s failed_companies=%s no_job_companies=%s",
-        len(all_jobs),
-        len(new_jobs),
+        "Search totals successful_companies=%s failed_companies=%s raw=%s accepted=%s rejected=%s new=%s duplicates=%s",
         report.successful_company_count,
         report.failed_company_count,
-        report.no_job_company_count,
+        len(report.raw_jobs),
+        len(all_jobs),
+        len(report.rejected_jobs),
+        len(new_jobs),
+        len(duplicate_jobs),
     )
 
-    email_config = get_email_config()
-    send_job_email(email_config, new_jobs, report, generated_at, test_mode)
-    LOGGER.info("Email sent to %s.", email_config.email_to)
+    email_sent = False
+    if should_send_email:
+        email_config = get_email_config()
+        send_job_email(email_config, new_jobs, report, generated_at, test_mode)
+        email_sent = True
+        LOGGER.info("Email sent to %s.", email_config.email_to)
+    else:
+        LOGGER.info("Email skipped because SEND_EMAIL=false.")
 
-    if test_mode:
-        LOGGER.info("Test mode is enabled; not updating seen_jobs.json.")
-        return
-
-    updated_seen_urls = seen_urls | {job.url for job in new_jobs}
-    save_seen_jobs(SEEN_JOBS_PATH, updated_seen_urls)
-    LOGGER.info("Saved %s seen job URLs.", len(updated_seen_urls))
+    if should_update_seen and email_sent:
+        updated_seen_ids = seen_ids | {job.unique_id for job in new_jobs}
+        save_seen_jobs(SEEN_JOBS_PATH, updated_seen_ids)
+        LOGGER.info("Saved %s seen job IDs.", len(updated_seen_ids))
+    else:
+        LOGGER.info("Seen jobs not updated. update_seen=%s email_sent=%s", should_update_seen, email_sent)
 
 
 def _should_run_now(now_dublin: datetime) -> bool:
