@@ -1,1 +1,1 @@
-# sponsor
+echo "# sponsor"
