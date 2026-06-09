@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import search_jobs
 from models import CompanyConfig, RawJob, SourceConfig
-from sources import SourceError, _json_response, attrax_jobs, company_careers_jobs, phenom_jobs, request_with_retries, successfactors_jobs
+from sources import SourceError, _json_response, attrax_jobs, company_careers_jobs, eightfold_jobs, oracle_hcm_jobs, phenom_jobs, request_with_retries, successfactors_jobs
 
 
 class FakeResponse:
@@ -198,3 +198,44 @@ def test_phenom_parser_captures_ireland_quality_role() -> None:
     assert jobs[0].title == "QA Specialist"
     assert jobs[0].location == "Cork, Ireland"
     assert jobs[0].url == "https://example.wd5.myworkdayjobs.com/job/Cork/QA-Specialist_R-1/apply"
+
+
+def test_oracle_hcm_parser_captures_expanded_requisition_list() -> None:
+    payload = {
+        "items": [
+            {
+                "requisitionList": [
+                    {
+                        "Id": "210754522",
+                        "Title": "Application Support Engineer",
+                        "PrimaryLocation": "Dublin, Ireland",
+                        "ShortDescriptionStr": "Production support, incident management, and application support.",
+                        "JobFunction": "Technology",
+                        "WorkplaceType": "Hybrid",
+                        "workLocation": [{"TownOrCity": "Dublin", "Country": "IE"}],
+                    }
+                ]
+            }
+        ]
+    }
+    session = FakeSession([FakeResponse(200, payload=payload, url="https://oracle.example/hcmRestApi/resources/latest/recruitingCEJobRequisitions")])
+    company = CompanyConfig("Oracle EMEA Ltd", "Oracle", ["Oracle"], sources=[SourceConfig("oracle_hcm", host="oracle.example", site="CX_45001")])
+    jobs = oracle_hcm_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Application Support Engineer"
+    assert jobs[0].location == "Dublin, Ireland, Dublin"
+    assert jobs[0].url == "https://oracle.example/hcmUI/CandidateExperience/en/sites/CX_45001/job/210754522"
+
+
+def test_eightfold_parser_uses_generic_job_card_extraction() -> None:
+    html = """
+    <div class="position">
+      <h2>Technical Support Engineer</h2>
+      <span>Dublin, Ireland</span>
+      <a href="/careers/job/technical-support-engineer-123">View job</a>
+    </div>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://example.eightfold.ai/careers")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("eightfold", endpoint="https://example.eightfold.ai/careers")])
+    jobs = eightfold_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Technical Support Engineer"
+    assert jobs[0].location == "Dublin"

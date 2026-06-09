@@ -90,6 +90,10 @@ def fetch_jobs(session: requests.Session, company: CompanyConfig, source: Source
         return successfactors_jobs(session, company, source)
     if source.source_type == "phenom":
         return phenom_jobs(session, company, source)
+    if source.source_type == "oracle_hcm":
+        return oracle_hcm_jobs(session, company, source)
+    if source.source_type == "eightfold":
+        return eightfold_jobs(session, company, source)
     if source.source_type == "fallback_search":
         return fallback_search_jobs(session, company, source)
     raise SourceError(f"Unsupported source type: {source.source_type}")
@@ -122,11 +126,15 @@ def source_endpoint(source: SourceConfig) -> str:
         return source.endpoint
     if source.source_type == "phenom":
         return source.endpoint
+    if source.source_type == "oracle_hcm":
+        return source.endpoint or f"https://{source.host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
+    if source.source_type == "eightfold":
+        return source.endpoint
     return source.source_type
 
 
 def source_quality(source_type: str) -> str:
-    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio", "attrax", "successfactors", "phenom"}:
+    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio", "attrax", "successfactors", "phenom", "oracle_hcm", "eightfold"}:
         return "direct_api" if source_type in {"workday", "amazon_jobs"} else "job_board_api"
     if source_type == "company_careers":
         return "direct_career_page"
@@ -270,40 +278,41 @@ def workday_jobs(session: requests.Session, company: CompanyConfig, source: Sour
     jobs: list[RawJob] = []
     headers = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Mozilla/5.0"}
     limit = 20
-    offset = 0
-    while True:
-        response = request_with_retries(
-            session,
-            "POST",
-            endpoint,
-            json={"appliedFacets": {}, "limit": limit, "offset": offset, "searchText": ""},
-            headers=headers,
-            timeout=30,
-        )
-        _raise_for_status(response, endpoint)
-        data = _json_response(response, endpoint)
-        postings = data.get("jobPostings", [])
-        for job in postings:
-            path = job.get("externalPath", "")
-            jobs.append(
-                RawJob(
-                    company=company.brand_name,
-                    title=job.get("title", ""),
-                    location=job.get("locationsText", ""),
-                    url=f"https://{source.host}/{source.site}{path}",
-                    source="Workday",
-                    endpoint=endpoint,
-                    snippet=" ".join(str(value) for value in job.get("bulletFields", [])),
-                    work_type=job.get("remoteType", ""),
-                    source_type=source.source_type,
-                    source_quality=source_quality(source.source_type),
-                )
+    for term in SEARCH_TERMS:
+        offset = 0
+        while True:
+            response = request_with_retries(
+                session,
+                "POST",
+                endpoint,
+                json={"appliedFacets": {}, "limit": limit, "offset": offset, "searchText": term},
+                headers=headers,
+                timeout=30,
             )
-        offset += limit
-        if not postings or offset >= int(data.get("total", len(jobs))):
-            break
-        time.sleep(0.2)
-    return jobs
+            _raise_for_status(response, endpoint)
+            data = _json_response(response, endpoint)
+            postings = data.get("jobPostings", [])
+            for job in postings:
+                path = job.get("externalPath", "")
+                jobs.append(
+                    RawJob(
+                        company=company.brand_name,
+                        title=job.get("title", ""),
+                        location=job.get("locationsText", ""),
+                        url=_workday_job_url(source, path),
+                        source="Workday",
+                        endpoint=endpoint,
+                        snippet=" ".join(str(value) for value in job.get("bulletFields", [])),
+                        work_type=job.get("remoteType", ""),
+                        source_type=source.source_type,
+                        source_quality=source_quality(source.source_type),
+                    )
+                )
+            offset += limit
+            if not postings or offset >= int(data.get("total", len(jobs))) or offset >= 100:
+                break
+            time.sleep(0.2)
+    return _dedupe_raw(jobs)
 
 
 def amazon_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
@@ -528,6 +537,51 @@ def phenom_jobs(session: requests.Session, company: CompanyConfig, source: Sourc
     return _dedupe_raw(jobs)
 
 
+def oracle_hcm_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    jobs: list[RawJob] = []
+    expand = "requisitionList.workLocation,requisitionList.otherWorkLocations,requisitionList.secondaryLocations,flexFieldsFacet.values,requisitionList.requisitionFlexFields"
+    for term in SEARCH_TERMS:
+        finder = f"findReqs;siteNumber={source.site},keyword={term},location=Ireland,limit=25,offset=0,sortBy=RELEVANCY"
+        response = request_with_retries(
+            session,
+            "GET",
+            endpoint,
+            params={"onlyData": "true", "expand": expand, "finder": finder},
+            headers={"Accept": "application/json"},
+            timeout=30,
+        )
+        _raise_for_status(response, endpoint)
+        data = _json_response(response, endpoint)
+        for container in data.get("items", []) if isinstance(data, dict) else []:
+            for job in container.get("requisitionList", []) or []:
+                location = _oracle_location(job)
+                jobs.append(
+                    RawJob(
+                        company=company.brand_name,
+                        title=job.get("Title", ""),
+                        location=location,
+                        url=_oracle_job_url(source, job),
+                        source="Oracle HCM Careers",
+                        endpoint=response.url if getattr(response, "url", "") else endpoint,
+                        snippet=job.get("ShortDescriptionStr", "") or job.get("JobFunction", "") or job.get("JobFamily", ""),
+                        work_type=job.get("WorkplaceType", "") or job.get("JobType", ""),
+                        category=job.get("JobFunction", "") or job.get("JobFamily", ""),
+                        source_type=source.source_type,
+                        source_quality=source_quality(source.source_type),
+                    )
+                )
+        time.sleep(0.2)
+    return _dedupe_raw(jobs)
+
+
+def eightfold_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
+    _raise_for_status(response, endpoint)
+    return _parse_generic_html_jobs(company, source, endpoint, response.text, "Eightfold Careers")
+
+
 def fallback_search_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     query = f'"{company.brand_name}" ("QA" OR "SDET" OR "test automation" OR "support engineer" OR "validation engineer") Ireland jobs'
     endpoint = f"https://www.bing.com/search?q={quote_plus(query)}"
@@ -730,6 +784,27 @@ def _phenom_job_url(endpoint: str, job: dict) -> str:
     seq = job.get("jobSeqNo", "")
     title = re.sub(r"[^a-z0-9]+", "-", (job.get("title", "") or "job").lower()).strip("-")
     return f"{base}/job/{title}/{seq}" if seq else base
+
+
+def _workday_job_url(source: SourceConfig, path: str) -> str:
+    if path.startswith("http"):
+        return path
+    if source.host.endswith("myworkdaysite.com"):
+        return f"https://{source.host}/recruiting/{source.tenant}/{source.site}{path}"
+    return f"https://{source.host}/{source.site}{path}"
+
+
+def _oracle_location(job: dict) -> str:
+    locations = [job.get("PrimaryLocation", "")]
+    for key in ["secondaryLocations", "otherWorkLocations", "workLocation"]:
+        for location in job.get(key, []) or []:
+            if isinstance(location, dict):
+                locations.append(location.get("Name", "") or location.get("LocationName", "") or location.get("TownOrCity", ""))
+    return ", ".join(dict.fromkeys(_clean_text(location) for location in locations if _clean_text(location)))
+
+
+def _oracle_job_url(source: SourceConfig, job: dict) -> str:
+    return f"https://{source.host}/hcmUI/CandidateExperience/en/sites/{source.site}/job/{job.get('Id', '')}"
 
 
 def _html_to_text(html: str) -> str:

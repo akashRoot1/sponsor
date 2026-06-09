@@ -14,7 +14,7 @@ The search now prioritizes direct public company sources instead of DuckDuckGo o
 - SmartRecruiters public API
 - Workday CXS API where reliable
 - Amazon Jobs API
-- Teamtailor, BambooHR, Personio, Attrax, Phenom, and SuccessFactors public job boards where configured
+- Teamtailor, BambooHR, Personio, Attrax, Phenom, SuccessFactors, Oracle HCM, and Eightfold public job boards where configured
 - Simple public company careers pages
 - Search fallback only when a direct source is unavailable
 
@@ -214,6 +214,10 @@ Examples of stronger direct sources now configured:
 - AbbVie uses `attrax` at `https://careers.abbvie.com/en/jobs`, which captures result cards such as `Quality Engineer` in `Sligo, SO`.
 - SAP and Boston Scientific use `successfactors`, which captures server-rendered job result rows.
 - Fiserv, Eli Lilly, and MSD use `phenom`, which queries the public `/widgets` job endpoint instead of scraping a JavaScript landing page.
+- JPMorgan Chase and Oracle use `oracle_hcm`, which queries Oracle Candidate Experience requisition APIs.
+- PayPal, Citi, BNY, Medtronic, and AstraZeneca/Alexion are marked as `eightfold`; these sites can restrict public API access, so the parser uses public page extraction where possible.
+
+The current provider audit lives in `reports/provider_audit.md`. It lists the companies converted away from generic scraping and every company entry that still uses `company_careers`.
 
 ## Add Keywords
 
