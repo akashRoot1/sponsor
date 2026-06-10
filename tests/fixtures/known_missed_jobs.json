@@ -1,0 +1,32 @@
+[
+  {
+    "company": "Cubic Telecom",
+    "title": "Test Support Engineer (Maternity Cover)",
+    "location": "Dublin",
+    "url": "https://www.cubic3.com/careers",
+    "description": "Operations test support role with troubleshooting, release support, and production incident follow-up.",
+    "work_type": "Temporary / Remote",
+    "category": "Operations",
+    "source": "known_missed_fixture"
+  },
+  {
+    "company": "Cubic Telecom",
+    "title": "Application Support Engineer",
+    "location": "Dublin / Remote",
+    "url": "https://www.cubic3.com/careers",
+    "description": "Application support and incident management for customer platforms.",
+    "work_type": "Remote",
+    "category": "Operations",
+    "source": "known_missed_fixture"
+  },
+  {
+    "company": "AbbVie",
+    "title": "Quality Engineer",
+    "location": "Sligo, SO",
+    "url": "https://careers.abbvie.com/en/job/quality-engineer-in-sligo-so-jid-24893",
+    "description": "Quality Engineer role supporting GMP operations, validation, quality systems, and release readiness.",
+    "work_type": "Hybrid / Full-time",
+    "category": "Quality",
+    "source": "known_missed_fixture"
+  }
+]

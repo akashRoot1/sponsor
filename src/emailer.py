@@ -43,6 +43,7 @@ def render_plain_text(jobs: list[JobResult], report: SearchReport, generated_at:
 
     lines.extend(["", "Broad QA/Test/Quality mode is enabled: jobs with QA, test, testing, tester, quality analyst, test analyst, quality assurance, or software test in the title are included when location is relevant."])
     lines.extend(_reliability_lines(report))
+    lines.extend(_provider_lines(report))
 
     apply_first = [job for job in jobs if job.category == "Apply First - Best QA/Test Matches"]
     if apply_first:
@@ -131,6 +132,7 @@ def render_html(jobs: list[JobResult], report: SearchReport, generated_at: datet
         {_summary_html(jobs, report, generated_at)}
         <p>Broad QA/Test/Quality mode is enabled: jobs with QA, test, testing, tester, quality analyst, test analyst, quality assurance, or software test in the title are included when location is relevant.</p>
         {_reliability_html(report)}
+        {_provider_html(report)}
         {warning}
         {apply_first_html}
         {jobs_html}
@@ -203,6 +205,39 @@ def _reliability_html(report: SearchReport) -> str:
     return "<h2>Job Fetch Reliability Summary</h2><ul>" + "".join(f"<li><strong>{html.escape(label)}:</strong> {value}</li>" for label, value in rows) + "</ul>"
 
 
+def _provider_lines(report: SearchReport) -> list[str]:
+    if not report.source_health:
+        return []
+    source_counts = Counter(stats.source_type for stats in report.source_health)
+    status_counts = Counter(stats.status for stats in report.source_health)
+    quality_counts = Counter(stats.source_quality for stats in report.source_health)
+    lines = ["", "Provider Coverage Summary"]
+    lines.append("- Sources by provider: " + ", ".join(f"{source}={count}" for source, count in source_counts.most_common()))
+    lines.append("- Sources by status: " + ", ".join(f"{status}={count}" for status, count in status_counts.most_common()))
+    lines.append("- Sources by quality: " + ", ".join(f"{quality}={count}" for quality, count in quality_counts.most_common()))
+    custom_count = source_counts.get("company_custom", 0)
+    if custom_count:
+        lines.append(f"- Custom public career-page mappings searched: {custom_count}. These are weaker than provider APIs; inspect artifacts for extraction quality.")
+    return lines
+
+
+def _provider_html(report: SearchReport) -> str:
+    if not report.source_health:
+        return ""
+    source_counts = Counter(stats.source_type for stats in report.source_health)
+    status_counts = Counter(stats.status for stats in report.source_health)
+    quality_counts = Counter(stats.source_quality for stats in report.source_health)
+    rows = [
+        ("Sources by provider", ", ".join(f"{source}={count}" for source, count in source_counts.most_common())),
+        ("Sources by status", ", ".join(f"{status}={count}" for status, count in status_counts.most_common())),
+        ("Sources by quality", ", ".join(f"{quality}={count}" for quality, count in quality_counts.most_common())),
+    ]
+    custom_count = source_counts.get("company_custom", 0)
+    if custom_count:
+        rows.append(("Custom public career-page mappings searched", f"{custom_count}. These are weaker than provider APIs; inspect artifacts for extraction quality."))
+    return "<h2>Provider Coverage Summary</h2><ul>" + "".join(f"<li><strong>{html.escape(label)}:</strong> {html.escape(str(value))}</li>" for label, value in rows) + "</ul>"
+
+
 def _failure_lines(report: SearchReport) -> list[str]:
     if not report.failures:
         return []
@@ -260,8 +295,10 @@ def _group_by_category(jobs: list[JobResult]) -> dict[str, list[JobResult]]:
 
 
 def _fetch_method(job: JobResult) -> str:
-    if job.source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio"}:
+    if job.source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio", "attrax", "successfactors", "phenom", "oracle_hcm", "icims", "jobvite", "taleo", "recruitee", "pinpoint"}:
         return "API"
+    if job.source_type == "company_custom":
+        return "custom public careers page"
     if job.source_type in {"company_careers", "fallback_search"}:
         return "fallback" if job.source_type == "fallback_search" else "careers page"
     return job.source_quality or "unknown"

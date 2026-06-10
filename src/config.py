@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT_DIR / "data"
+REPORTS_DIR = ROOT_DIR / "reports"
 SEEN_JOBS_PATH = DATA_DIR / "seen_jobs.json"
 RAW_RESULTS_PATH = DATA_DIR / "raw_results.json"
 FILTERED_RESULTS_PATH = DATA_DIR / "filtered_results.json"
@@ -15,6 +16,12 @@ REJECTED_RESULTS_PATH = DATA_DIR / "rejected_results.json"
 ACCEPTED_RESULTS_PATH = DATA_DIR / "accepted_results.json"
 DUPLICATES_REMOVED_PATH = DATA_DIR / "duplicates_removed.json"
 SOURCE_HEALTH_PATH = DATA_DIR / "source_health.json"
+MISSING_SOURCE_MAPPINGS_PATH = DATA_DIR / "missing_source_mappings.json"
+PROVIDER_DETECTION_RESULTS_PATH = DATA_DIR / "provider_detection_results.json"
+KNOWN_MISSED_JOBS_CHECK_PATH = DATA_DIR / "known_missed_jobs_check.json"
+KNOWN_MISSED_JOBS_FIXTURE_PATH = ROOT_DIR / "tests" / "fixtures" / "known_missed_jobs.json"
+SOURCE_COVERAGE_PATH = REPORTS_DIR / "source_coverage.json"
+PROVIDER_AUDIT_PATH = REPORTS_DIR / "provider_audit.md"
 DUBLIN_TIMEZONE = "Europe/Dublin"
 DEFAULT_EMAIL_TO = "akashvikram98@gmail.com"
 
@@ -73,3 +80,15 @@ def max_companies() -> int | None:
     except ValueError as exc:
         raise RuntimeError("MAX_COMPANIES must be a number if provided.") from exc
     return value if value > 0 else None
+
+
+def company_filter() -> str:
+    return os.getenv("COMPANY", "").strip()
+
+
+def provider_filter() -> str:
+    return os.getenv("PROVIDER", "").strip()
+
+
+def keyword_filter() -> str:
+    return os.getenv("SEARCH_KEYWORD", "").strip()

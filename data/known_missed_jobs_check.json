@@ -1,0 +1,47 @@
+[
+  {
+    "company": "Cubic Telecom",
+    "title": "Test Support Engineer (Maternity Cover)",
+    "location": "Dublin",
+    "url": "https://www.cubic3.com/careers",
+    "description": "Operations test support role with troubleshooting, release support, and production incident follow-up.",
+    "work_type": "Temporary / Remote",
+    "category": "Production/Application Support Roles",
+    "source": "known_missed_fixture",
+    "accepted": true,
+    "reason": "score=47; broad QA/Test/Quality title override",
+    "matched_keyword": "support engineer",
+    "score": 47,
+    "checked_at": "2026-06-10T11:39:26.482254+01:00"
+  },
+  {
+    "company": "Cubic Telecom",
+    "title": "Application Support Engineer",
+    "location": "Dublin / Remote",
+    "url": "https://www.cubic3.com/careers",
+    "description": "Application support and incident management for customer platforms.",
+    "work_type": "Remote",
+    "category": "Production/Application Support Roles",
+    "source": "known_missed_fixture",
+    "accepted": true,
+    "reason": "score=35; relevant role and Ireland location",
+    "matched_keyword": "application support engineer",
+    "score": 35,
+    "checked_at": "2026-06-10T11:39:26.482254+01:00"
+  },
+  {
+    "company": "AbbVie",
+    "title": "Quality Engineer",
+    "location": "Sligo, SO",
+    "url": "https://careers.abbvie.com/en/job/quality-engineer-in-sligo-so-jid-24893",
+    "description": "Quality Engineer role supporting GMP operations, validation, quality systems, and release readiness.",
+    "work_type": "Hybrid / Full-time",
+    "category": "QA / Test / Quality Broad Matches",
+    "source": "known_missed_fixture",
+    "accepted": true,
+    "reason": "score=35; relevant role and Ireland location",
+    "matched_keyword": "quality engineer",
+    "score": 35,
+    "checked_at": "2026-06-10T11:39:26.482254+01:00"
+  }
+]

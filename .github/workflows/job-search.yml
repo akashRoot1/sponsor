@@ -34,6 +34,18 @@ on:
         description: "Optional maximum number of companies to search"
         required: false
         default: ""
+      company:
+        description: "Optional company/alias filter, e.g. Cubic, AbbVie, Microsoft"
+        required: false
+        default: ""
+      provider:
+        description: "Optional source provider filter, e.g. workday, phenom, company_custom"
+        required: false
+        default: ""
+      keyword:
+        description: "Optional extra search keyword, e.g. validation, support, Playwright"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -72,6 +84,9 @@ jobs:
           SEND_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.send_email || 'true' }}
           UPDATE_SEEN: ${{ github.event_name == 'workflow_dispatch' && inputs.update_seen || 'true' }}
           MAX_COMPANIES: ${{ github.event_name == 'workflow_dispatch' && inputs.max_companies || '' }}
+          COMPANY: ${{ github.event_name == 'workflow_dispatch' && inputs.company || '' }}
+          PROVIDER: ${{ github.event_name == 'workflow_dispatch' && inputs.provider || '' }}
+          SEARCH_KEYWORD: ${{ github.event_name == 'workflow_dispatch' && inputs.keyword || '' }}
         run: python src/main.py
 
       - name: Upload search debug artifacts
@@ -87,6 +102,11 @@ jobs:
             data/accepted_results.json
             data/duplicates_removed.json
             data/source_health.json
+            data/missing_source_mappings.json
+            data/provider_detection_results.json
+            data/known_missed_jobs_check.json
+            reports/source_coverage.json
+            reports/provider_audit.md
           if-no-files-found: warn
 
       - name: Commit updated seen jobs

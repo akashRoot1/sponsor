@@ -94,6 +94,18 @@ def test_rejects_application_support_outside_ireland() -> None:
     assert decision.reason == "location_mismatch"
 
 
+def test_rejects_non_ireland_location_even_when_boilerplate_mentions_dublin() -> None:
+    boilerplate = "Cubic Telecom is headquartered in Dublin and supports global customer operations."
+    for title, location in [
+        ("Application Support Engineer", "Manila, Manila, Philippines"),
+        ("Test Support Engineer (Maternity Cover)", "Manila, Manila, Philippines"),
+        ("Senior Test Automation Engineer", "Madrid, Madrid, Spain"),
+    ]:
+        decision = evaluate_job(raw_job(title, location, "Cubic Telecom", boilerplate))
+        assert not decision.accepted
+        assert decision.reason == "location_mismatch"
+
+
 def test_accepts_application_support_dublin_remote() -> None:
     assert_accepts("Application Support Engineer", "Dublin / Remote", "Cubic Telecom")
 

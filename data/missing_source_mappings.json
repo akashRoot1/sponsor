@@ -1,0 +1,642 @@
+[
+  {
+    "company": "Google",
+    "legal_name": "Google Ireland Limited",
+    "careers_url": "https://www.google.com/about/careers/applications/jobs/results/",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Meta",
+    "legal_name": "Meta Platforms Ireland Limited",
+    "careers_url": "https://www.metacareers.com/jobs",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "TikTok",
+    "legal_name": "TikTok Technology Limited",
+    "careers_url": "https://careers.tiktok.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Apple",
+    "legal_name": "Apple Distribution International Limited",
+    "careers_url": "https://jobs.apple.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Apple",
+    "legal_name": "Apple Operations International Limited",
+    "careers_url": "https://jobs.apple.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "LinkedIn",
+    "legal_name": "LinkedIn Ireland Unlimited Company",
+    "careers_url": "https://www.linkedin.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "ServiceNow",
+    "legal_name": "ServiceNow Ireland Limited",
+    "careers_url": "https://careers.servicenow.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "TCS",
+    "legal_name": "Tata Consultancy Services Limited",
+    "careers_url": "https://www.tcs.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "TCS",
+    "legal_name": "Tata Consultancy Services Ireland Limited",
+    "careers_url": "https://www.tcs.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Cognizant",
+    "legal_name": "Cognizant Technology Solutions Ireland Limited",
+    "careers_url": "https://careers.cognizant.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Infosys",
+    "legal_name": "Infosys Limited",
+    "careers_url": "https://www.infosys.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Infosys",
+    "legal_name": "Infosys BPM Limited",
+    "careers_url": "https://www.infosysbpm.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Capgemini",
+    "legal_name": "Capgemini Ireland Limited",
+    "careers_url": "https://www.capgemini.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Deloitte",
+    "legal_name": "Deloitte Ireland LLP",
+    "careers_url": "https://apply.deloitte.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "KPMG",
+    "legal_name": "KPMG",
+    "careers_url": "https://kpmg.com/ie/en/home/careers.html",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "PwC",
+    "legal_name": "PricewaterhouseCoopers Services",
+    "careers_url": "https://www.pwc.ie/careers.html",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "IBM",
+    "legal_name": "IBM Global Services Limited",
+    "careers_url": "https://www.ibm.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "IBM",
+    "legal_name": "IBM Ireland Limited",
+    "careers_url": "https://www.ibm.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Expleo",
+    "legal_name": "Expleo Technology Ireland Limited",
+    "careers_url": "https://expleo.com/global/en/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "GlobalLogic",
+    "legal_name": "GlobalLogic Software and Technology Ireland Limited",
+    "careers_url": "https://www.globallogic.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Liberty IT",
+    "legal_name": "Liberty Information Technology Limited",
+    "careers_url": "https://www.liberty-it.co.uk/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "General Motors",
+    "legal_name": "General Motors IT Services Ireland Ltd",
+    "careers_url": "https://search-careers.gm.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Fenergo",
+    "legal_name": "Fenergo Limited",
+    "careers_url": "https://www.fenergo.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Bank of America",
+    "legal_name": "Bank of America Europe Designated Activity Company",
+    "careers_url": "https://careers.bankofamerica.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Bank of Ireland",
+    "legal_name": "Bank of Ireland Group PLC",
+    "careers_url": "https://careers.bankofireland.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Permanent TSB",
+    "legal_name": "Permanent TSB Public Limited Company",
+    "careers_url": "https://www.ptsb.ie/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "ICE",
+    "legal_name": "ICE Data Services Ireland Limited",
+    "careers_url": "https://www.ice.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Bloomberg",
+    "legal_name": "Bloomberg Data Management Services Limited",
+    "careers_url": "https://www.bloomberg.com/company/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Intel",
+    "legal_name": "Intel Ireland Limited",
+    "careers_url": "https://jobs.intel.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Intel",
+    "legal_name": "Intel Research and Development Ireland Limited",
+    "careers_url": "https://jobs.intel.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Dell",
+    "legal_name": "Dell Products Unlimited Company",
+    "careers_url": "https://jobs.dell.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Dell",
+    "legal_name": "EMC Information Systems International Unlimited Company",
+    "careers_url": "https://jobs.dell.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Arista",
+    "legal_name": "Arista Technology Ireland Unlimited Company",
+    "careers_url": "https://www.arista.com/en/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Huawei",
+    "legal_name": "Huawei Technologies Ireland Co Ltd",
+    "careers_url": "https://career.huawei.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Infineon",
+    "legal_name": "Infineon Technologies Semiconductor Ireland Limited",
+    "careers_url": "https://www.infineon.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Applied Software Consultants",
+    "legal_name": "Applied Software Consultants Limited",
+    "careers_url": "",
+    "configured_sources": [
+      "fallback_search"
+    ],
+    "weak_sources": [
+      "fallback_search"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Find a direct public careers provider; search fallback should remain last resort."
+  },
+  {
+    "company": "McKesson",
+    "legal_name": "McKesson Cork Business Solutions Unlimited Company",
+    "careers_url": "https://careers.mckesson.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "WuXi Biologics",
+    "legal_name": "WuXi Biologics Ireland Limited",
+    "careers_url": "https://www.wuxibiologics.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Johnson & Johnson",
+    "legal_name": "Johnson & Johnson Vision Care Ireland Unlimited Company",
+    "careers_url": "https://www.careers.jnj.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  },
+  {
+    "company": "Regeneron",
+    "legal_name": "Regeneron Ireland DAC",
+    "careers_url": "https://careers.regeneron.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "weak_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {},
+    "recommended_next_action": "Custom public careers page; inspect browser network for a stable public jobs API."
+  }
+]

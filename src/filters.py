@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
+from location_utils import is_ireland_relevant
 from models import RawJob
 
 
@@ -186,6 +187,37 @@ IRELAND_LOCATION_TERMS = [
     "irl",
 ]
 
+NON_IRELAND_LOCATION_TERMS = [
+    "manila",
+    "philippines",
+    "madrid",
+    "spain",
+    "london",
+    "united kingdom",
+    "uk",
+    "england",
+    "scotland",
+    "wales",
+    "germany",
+    "berlin",
+    "france",
+    "paris",
+    "netherlands",
+    "amsterdam",
+    "poland",
+    "warsaw",
+    "india",
+    "bangalore",
+    "bengaluru",
+    "hyderabad",
+    "pune",
+    "united states",
+    "usa",
+    "canada",
+    "toronto",
+    "australia",
+]
+
 EXCLUDED_BUSINESS_TERMS = [
     "sales",
     "marketing",
@@ -241,7 +273,10 @@ def evaluate_job(job: RawJob) -> FilterDecision:
     title = _normalize(job.title)
     description = _normalize(_strip_negative_phrases(job.snippet))
     location = _normalize(job.location)
-    combined = " ".join([title, description, location, _normalize(job.work_type), _normalize(job.category), _normalize(job.url)])
+    work_type = _normalize(job.work_type)
+    category = _normalize(job.category)
+    url = _normalize(job.url)
+    combined = " ".join([title, description, location, work_type, category, url])
 
     very_strong_title = _first_match(title, VERY_STRONG_TITLE_KEYWORDS)
     broad_title = _first_match(title, BROAD_TITLE_KEYWORDS)
@@ -252,7 +287,7 @@ def evaluate_job(job: RawJob) -> FilterDecision:
     weak_title = _first_match(title, WEAK_KEYWORDS)
     weak_description = _first_match(description, WEAK_KEYWORDS)
     context = _first_match(" ".join([title, description]), CONTEXT_KEYWORDS)
-    location_relevant = _location_is_relevant(combined)
+    location_relevant = _job_location_is_relevant(location, " ".join([work_type, category, url, description]))
 
     score = 0
     if very_strong_title:
@@ -339,7 +374,19 @@ def _category(title: str, description: str) -> str:
 
 
 def _location_is_relevant(text: str) -> bool:
-    return bool(_first_match(text, IRELAND_LOCATION_TERMS))
+    return bool(_first_match(text, IRELAND_LOCATION_TERMS) or is_ireland_relevant(text))
+
+
+def _job_location_is_relevant(location: str, fallback_context: str) -> bool:
+    if _location_is_relevant(location):
+        return True
+    if _has_explicit_non_ireland_location(location):
+        return False
+    return _location_is_relevant(fallback_context)
+
+
+def _has_explicit_non_ireland_location(location: str) -> bool:
+    return bool(location and not _location_is_relevant(location) and _first_match(location, NON_IRELAND_LOCATION_TERMS))
 
 
 def _first_match(text: str, terms: list[str]) -> str:

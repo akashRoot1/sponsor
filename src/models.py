@@ -105,6 +105,7 @@ class SourceStats:
     accepted_jobs: int = 0
     rejected_jobs: int = 0
     failed: bool = False
+    status: str = "pending"
     error: str = ""
     error_type: str = ""
     retries_performed: int = 0
@@ -112,6 +113,7 @@ class SourceStats:
     parsing_failures: int = 0
     timeout_failures: int = 0
     fallback_used: bool = False
+    last_checked_timestamp: str = ""
 
 
 @dataclass

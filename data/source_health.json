@@ -1,1 +1,26 @@
-[]
+[
+  {
+    "company": "Cubic Telecom",
+    "aliases_used": [
+      "Cubic Telecom",
+      "Cubic³",
+      "Cubic"
+    ],
+    "source_type": "ashby",
+    "endpoint": "https://api.ashbyhq.com/posting-api/job-board/cubic3?includeCompensation=true",
+    "source_quality": "job_board_api",
+    "raw_jobs_found": 20,
+    "accepted_jobs": 3,
+    "rejected_jobs": 17,
+    "failed": false,
+    "status": "success",
+    "error": "",
+    "error_type": "",
+    "retries_performed": 0,
+    "api_failures": 0,
+    "parsing_failures": 0,
+    "timeout_failures": 0,
+    "fallback_used": false,
+    "last_checked_timestamp": "2026-06-10T11:39:26.482254+01:00"
+  }
+]

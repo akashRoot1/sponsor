@@ -1,0 +1,1291 @@
+[
+  {
+    "company": "Cubic Telecom",
+    "legal_name": "Cubic Telecom Limited",
+    "careers_url": "https://www.cubic3.com/careers",
+    "configured_sources": [
+      "ashby"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Google",
+    "legal_name": "Google Ireland Limited",
+    "careers_url": "https://www.google.com/about/careers/applications/jobs/results/",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Microsoft",
+    "legal_name": "Microsoft Ireland Research Unlimited Company",
+    "careers_url": "https://jobs.careers.microsoft.com/global/en/search",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Microsoft",
+    "legal_name": "Microsoft Ireland Operations Limited",
+    "careers_url": "https://jobs.careers.microsoft.com/global/en/search",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Amazon",
+    "legal_name": "Amazon Web Services EMEA SARL",
+    "careers_url": "https://www.amazon.jobs",
+    "configured_sources": [
+      "amazon_jobs"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Amazon",
+    "legal_name": "Amazon Development Centre Ireland Limited",
+    "careers_url": "https://www.amazon.jobs",
+    "configured_sources": [
+      "amazon_jobs"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Amazon",
+    "legal_name": "Amazon Data Services Ireland Limited",
+    "careers_url": "https://www.amazon.jobs",
+    "configured_sources": [
+      "amazon_jobs"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Amazon",
+    "legal_name": "Amazon Ireland Support Services Limited",
+    "careers_url": "https://www.amazon.jobs",
+    "configured_sources": [
+      "amazon_jobs"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Stripe",
+    "legal_name": "Stripe Technology Company Limited",
+    "careers_url": "https://stripe.com/jobs",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Meta",
+    "legal_name": "Meta Platforms Ireland Limited",
+    "careers_url": "https://www.metacareers.com/jobs",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "TikTok",
+    "legal_name": "TikTok Technology Limited",
+    "careers_url": "https://careers.tiktok.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Apple",
+    "legal_name": "Apple Distribution International Limited",
+    "careers_url": "https://jobs.apple.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Apple",
+    "legal_name": "Apple Operations International Limited",
+    "careers_url": "https://jobs.apple.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "LinkedIn",
+    "legal_name": "LinkedIn Ireland Unlimited Company",
+    "careers_url": "https://www.linkedin.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Adobe",
+    "legal_name": "Adobe Systems Software Ireland Limited",
+    "careers_url": "https://careers.adobe.com/us/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "ServiceNow",
+    "legal_name": "ServiceNow Ireland Limited",
+    "careers_url": "https://careers.servicenow.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Workday",
+    "legal_name": "Workday Limited",
+    "careers_url": "https://workday.wd5.myworkdayjobs.com/Workday",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "workday",
+    "confidence": 25,
+    "evidence": [
+      "workday: matched `myworkdayjobs.com`"
+    ],
+    "recommended_mapping": {
+      "source_type": "workday",
+      "host": "workday.wd5.myworkdayjobs.com",
+      "tenant": "workday",
+      "site": "Workday"
+    }
+  },
+  {
+    "company": "MongoDB",
+    "legal_name": "MongoDB Limited",
+    "careers_url": "https://www.mongodb.com/careers",
+    "configured_sources": [
+      "lever"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "HubSpot",
+    "legal_name": "HubSpot Ireland Limited",
+    "careers_url": "https://www.hubspot.com/careers/jobs",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Intercom",
+    "legal_name": "Intercom R&D Unlimited Company",
+    "careers_url": "https://www.intercom.com/careers",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Toast",
+    "legal_name": "Toasttab Ireland Limited",
+    "careers_url": "https://careers.toasttab.com",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Datadog",
+    "legal_name": "Datadog Ireland Limited",
+    "careers_url": "https://careers.datadoghq.com",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Zendesk",
+    "legal_name": "Zendesk International Limited",
+    "careers_url": "https://jobs.zendesk.com",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Guidewire",
+    "legal_name": "Guidewire Software Ireland Limited",
+    "careers_url": "https://careers.guidewire.com",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "OpenAI",
+    "legal_name": "OpenAI Ireland Limited",
+    "careers_url": "https://openai.com/careers",
+    "configured_sources": [
+      "ashby"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Squarespace",
+    "legal_name": "Squarespace Ireland Limited",
+    "careers_url": "https://www.squarespace.com/about/careers",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "2K Games",
+    "legal_name": "2K Games Dublin Limited",
+    "careers_url": "https://2k.com/jobs",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Accenture",
+    "legal_name": "Accenture Limited",
+    "careers_url": "https://www.accenture.com/ie-en/careers/jobsearch",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Accenture",
+    "legal_name": "Accenture Global Solutions Limited",
+    "careers_url": "https://www.accenture.com/ie-en/careers/jobsearch",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "TCS",
+    "legal_name": "Tata Consultancy Services Limited",
+    "careers_url": "https://www.tcs.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "TCS",
+    "legal_name": "Tata Consultancy Services Ireland Limited",
+    "careers_url": "https://www.tcs.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Cognizant",
+    "legal_name": "Cognizant Technology Solutions Ireland Limited",
+    "careers_url": "https://careers.cognizant.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Infosys",
+    "legal_name": "Infosys Limited",
+    "careers_url": "https://www.infosys.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Infosys",
+    "legal_name": "Infosys BPM Limited",
+    "careers_url": "https://www.infosysbpm.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "HCLTech",
+    "legal_name": "HCL Ireland Information Systems Limited",
+    "careers_url": "https://careers.hcltech.com/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "HCLTech",
+    "legal_name": "HCL Technologies Limited",
+    "careers_url": "https://careers.hcltech.com/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Capgemini",
+    "legal_name": "Capgemini Ireland Limited",
+    "careers_url": "https://www.capgemini.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Deloitte",
+    "legal_name": "Deloitte Ireland LLP",
+    "careers_url": "https://apply.deloitte.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "EY",
+    "legal_name": "Ernst & Young",
+    "careers_url": "https://careers.ey.com/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "KPMG",
+    "legal_name": "KPMG",
+    "careers_url": "https://kpmg.com/ie/en/home/careers.html",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "PwC",
+    "legal_name": "PricewaterhouseCoopers Services",
+    "careers_url": "https://www.pwc.ie/careers.html",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "IBM",
+    "legal_name": "IBM Global Services Limited",
+    "careers_url": "https://www.ibm.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "IBM",
+    "legal_name": "IBM Ireland Limited",
+    "careers_url": "https://www.ibm.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "NTT DATA",
+    "legal_name": "NTT DATA Services Ireland Limited",
+    "careers_url": "https://www.nttdata.com/global/en/careers",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Version 1",
+    "legal_name": "Version 1 Software Limited",
+    "careers_url": "https://www.version1.com/careers",
+    "configured_sources": [
+      "smartrecruiters"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Expleo",
+    "legal_name": "Expleo Technology Ireland Limited",
+    "careers_url": "https://expleo.com/global/en/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "GlobalLogic",
+    "legal_name": "GlobalLogic Software and Technology Ireland Limited",
+    "careers_url": "https://www.globallogic.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Liberty IT",
+    "legal_name": "Liberty Information Technology Limited",
+    "careers_url": "https://www.liberty-it.co.uk/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "General Motors",
+    "legal_name": "General Motors IT Services Ireland Ltd",
+    "careers_url": "https://search-careers.gm.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Red Hat",
+    "legal_name": "Red Hat Limited",
+    "careers_url": "https://www.redhat.com/en/jobs",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Mastercard",
+    "legal_name": "MasterCard Ireland Limited",
+    "careers_url": "https://mastercard.wd1.myworkdayjobs.com/mastercard",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "workday",
+    "confidence": 25,
+    "evidence": [
+      "workday: matched `myworkdayjobs.com`"
+    ],
+    "recommended_mapping": {
+      "source_type": "workday",
+      "host": "mastercard.wd1.myworkdayjobs.com",
+      "tenant": "mastercard",
+      "site": "mastercard"
+    }
+  },
+  {
+    "company": "Fiserv",
+    "legal_name": "Fiserv Solutions Europe Limited",
+    "careers_url": "https://careers.fiserv.com/us/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "PayPal",
+    "legal_name": "PayPal Europe Services Limited",
+    "careers_url": "https://paypal.eightfold.ai/careers",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "eightfold",
+    "confidence": 25,
+    "evidence": [
+      "eightfold: matched `eightfold.ai`"
+    ],
+    "recommended_mapping": {
+      "source_type": "eightfold",
+      "endpoint": "https://paypal.eightfold.ai/careers"
+    }
+  },
+  {
+    "company": "Circle",
+    "legal_name": "Circle Internet Financial Trading Company Limited",
+    "careers_url": "https://careers.circle.com/us/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Fenergo",
+    "legal_name": "Fenergo Limited",
+    "careers_url": "https://www.fenergo.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "JPMorgan Chase",
+    "legal_name": "J.P. Morgan SE",
+    "careers_url": "https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001",
+    "configured_sources": [
+      "oracle_hcm"
+    ],
+    "detected_provider": "oracle_hcm",
+    "confidence": 50,
+    "evidence": [
+      "oracle_hcm: matched `oraclecloud.com/hcmUI`",
+      "oracle_hcm: matched `CandidateExperience`"
+    ],
+    "recommended_mapping": {
+      "source_type": "oracle_hcm",
+      "host": "jpmc.fa.oraclecloud.com",
+      "site": "CX_1001"
+    }
+  },
+  {
+    "company": "Bank of America",
+    "legal_name": "Bank of America Europe Designated Activity Company",
+    "careers_url": "https://careers.bankofamerica.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Citi",
+    "legal_name": "Citibank Europe Public Limited Company",
+    "careers_url": "https://jobs.citi.com",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Citi",
+    "legal_name": "Citibank N.A.",
+    "careers_url": "https://jobs.citi.com",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "BNY",
+    "legal_name": "BNY Mellon Fund Services Ireland DAC",
+    "careers_url": "https://bnymellon.eightfold.ai/careers",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "eightfold",
+    "confidence": 25,
+    "evidence": [
+      "eightfold: matched `eightfold.ai`"
+    ],
+    "recommended_mapping": {
+      "source_type": "eightfold",
+      "endpoint": "https://bnymellon.eightfold.ai/careers"
+    }
+  },
+  {
+    "company": "Bank of Ireland",
+    "legal_name": "Bank of Ireland Group PLC",
+    "careers_url": "https://careers.bankofireland.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "AIB",
+    "legal_name": "Allied Irish Banks PLC",
+    "careers_url": "https://jobs.aib.ie/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Permanent TSB",
+    "legal_name": "Permanent TSB Public Limited Company",
+    "careers_url": "https://www.ptsb.ie/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "State Street",
+    "legal_name": "State Street Technology Ireland Ltd",
+    "careers_url": "https://statestreet.wd1.myworkdayjobs.com/Global",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "workday",
+    "confidence": 25,
+    "evidence": [
+      "workday: matched `myworkdayjobs.com`"
+    ],
+    "recommended_mapping": {
+      "source_type": "workday",
+      "host": "statestreet.wd1.myworkdayjobs.com",
+      "tenant": "statestreet",
+      "site": "Global"
+    }
+  },
+  {
+    "company": "ICE",
+    "legal_name": "ICE Data Services Ireland Limited",
+    "careers_url": "https://www.ice.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Bloomberg",
+    "legal_name": "Bloomberg Data Management Services Limited",
+    "careers_url": "https://www.bloomberg.com/company/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Intel",
+    "legal_name": "Intel Ireland Limited",
+    "careers_url": "https://jobs.intel.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Intel",
+    "legal_name": "Intel Research and Development Ireland Limited",
+    "careers_url": "https://jobs.intel.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Analog Devices",
+    "legal_name": "Analog Devices International Unlimited Company",
+    "careers_url": "https://analogdevices.wd1.myworkdayjobs.com/External",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "workday",
+    "confidence": 25,
+    "evidence": [
+      "workday: matched `myworkdayjobs.com`"
+    ],
+    "recommended_mapping": {
+      "source_type": "workday",
+      "host": "analogdevices.wd1.myworkdayjobs.com",
+      "tenant": "analogdevices",
+      "site": "External"
+    }
+  },
+  {
+    "company": "Dell",
+    "legal_name": "Dell Products Unlimited Company",
+    "careers_url": "https://jobs.dell.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Dell",
+    "legal_name": "EMC Information Systems International Unlimited Company",
+    "careers_url": "https://jobs.dell.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Cisco",
+    "legal_name": "Cisco Systems Internetworking Ireland Limited",
+    "careers_url": "https://careers.cisco.com/global/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Cadence",
+    "legal_name": "Cadence Design Systems Ireland Limited",
+    "careers_url": "https://cadence.wd1.myworkdayjobs.com/External_Careers",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "workday",
+    "confidence": 25,
+    "evidence": [
+      "workday: matched `myworkdayjobs.com`"
+    ],
+    "recommended_mapping": {
+      "source_type": "workday",
+      "host": "cadence.wd1.myworkdayjobs.com",
+      "tenant": "cadence",
+      "site": "External_Careers"
+    }
+  },
+  {
+    "company": "Arista",
+    "legal_name": "Arista Technology Ireland Unlimited Company",
+    "careers_url": "https://www.arista.com/en/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Huawei",
+    "legal_name": "Huawei Technologies Ireland Co Ltd",
+    "careers_url": "https://career.huawei.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Infineon",
+    "legal_name": "Infineon Technologies Semiconductor Ireland Limited",
+    "careers_url": "https://www.infineon.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Applied Software Consultants",
+    "legal_name": "Applied Software Consultants Limited",
+    "careers_url": "",
+    "configured_sources": [
+      "fallback_search"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Kaseya",
+    "legal_name": "Kaseya Limited",
+    "careers_url": "https://www.kaseya.com/careers",
+    "configured_sources": [
+      "greenhouse"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Cloudera",
+    "legal_name": "Cloudera International Limited",
+    "careers_url": "https://www.cloudera.com/careers",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Logitech",
+    "legal_name": "Logitech Ireland Services Limited",
+    "careers_url": "https://jobs.jobvite.com/logitech",
+    "configured_sources": [
+      "jobvite"
+    ],
+    "detected_provider": "jobvite",
+    "confidence": 50,
+    "evidence": [
+      "jobvite: matched `jobvite.com`",
+      "jobvite: matched `jobs.jobvite.com`"
+    ],
+    "recommended_mapping": {
+      "source_type": "jobvite",
+      "endpoint": "https://jobs.jobvite.com/logitech"
+    }
+  },
+  {
+    "company": "McKesson",
+    "legal_name": "McKesson Cork Business Solutions Unlimited Company",
+    "careers_url": "https://careers.mckesson.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Optum",
+    "legal_name": "Optum Services Ireland Limited",
+    "careers_url": "https://careers.unitedhealthgroup.com",
+    "configured_sources": [
+      "taleo"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "SAP",
+    "legal_name": "SAP Ireland Limited",
+    "careers_url": "https://jobs.sap.com/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Oracle",
+    "legal_name": "Oracle EMEA Ltd",
+    "careers_url": "https://eeho.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/jobsearch",
+    "configured_sources": [
+      "oracle_hcm"
+    ],
+    "detected_provider": "oracle_hcm",
+    "confidence": 50,
+    "evidence": [
+      "oracle_hcm: matched `oraclecloud.com/hcmUI`",
+      "oracle_hcm: matched `CandidateExperience`"
+    ],
+    "recommended_mapping": {
+      "source_type": "oracle_hcm",
+      "host": "eeho.fa.us2.oraclecloud.com",
+      "site": "jobsearch"
+    }
+  },
+  {
+    "company": "Oracle Financial Services",
+    "legal_name": "Oracle Financial Services Software B.V",
+    "careers_url": "https://eeho.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/jobsearch",
+    "configured_sources": [
+      "oracle_hcm"
+    ],
+    "detected_provider": "oracle_hcm",
+    "confidence": 50,
+    "evidence": [
+      "oracle_hcm: matched `oraclecloud.com/hcmUI`",
+      "oracle_hcm: matched `CandidateExperience`"
+    ],
+    "recommended_mapping": {
+      "source_type": "oracle_hcm",
+      "host": "eeho.fa.us2.oraclecloud.com",
+      "site": "jobsearch"
+    }
+  },
+  {
+    "company": "Eli Lilly",
+    "legal_name": "Eli Lilly Kinsale Limited",
+    "careers_url": "https://careers.lilly.com/us/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Eli Lilly",
+    "legal_name": "Eli Lilly Cork Limited",
+    "careers_url": "https://careers.lilly.com/us/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "WuXi Biologics",
+    "legal_name": "WuXi Biologics Ireland Limited",
+    "careers_url": "https://www.wuxibiologics.com/careers",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Pfizer",
+    "legal_name": "Pfizer Ireland Pharmaceuticals Unlimited Company",
+    "careers_url": "https://www.pfizer.com/about/careers",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "MSD",
+    "legal_name": "MSD International GmbH",
+    "careers_url": "https://jobs.msd.com/gb/en/search-results",
+    "configured_sources": [
+      "phenom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Johnson & Johnson",
+    "legal_name": "Johnson & Johnson Vision Care Ireland Unlimited Company",
+    "careers_url": "https://www.careers.jnj.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Boston Scientific",
+    "legal_name": "Boston Scientific Ireland Limited",
+    "careers_url": "https://jobs.bostonscientific.com/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Boston Scientific",
+    "legal_name": "Boston Scientific Cork",
+    "careers_url": "https://jobs.bostonscientific.com/search/",
+    "configured_sources": [
+      "successfactors"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "AbbVie",
+    "legal_name": "AbbVie Ireland NL B.V.",
+    "careers_url": "https://careers.abbvie.com/en/jobs",
+    "configured_sources": [
+      "attrax"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Abbott",
+    "legal_name": "Abbott Ireland",
+    "careers_url": "https://www.jobs.abbott",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Abbott",
+    "legal_name": "Abbott Diagnostics",
+    "careers_url": "https://www.jobs.abbott",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Regeneron",
+    "legal_name": "Regeneron Ireland DAC",
+    "careers_url": "https://careers.regeneron.com",
+    "configured_sources": [
+      "company_custom"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Medtronic",
+    "legal_name": "Medtronic Vascular Galway Unlimited Company",
+    "careers_url": "https://medtronic.eightfold.ai/careers",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "eightfold",
+    "confidence": 25,
+    "evidence": [
+      "eightfold: matched `eightfold.ai`"
+    ],
+    "recommended_mapping": {
+      "source_type": "eightfold",
+      "endpoint": "https://medtronic.eightfold.ai/careers"
+    }
+  },
+  {
+    "company": "Stryker",
+    "legal_name": "Stryker Ireland Limited",
+    "careers_url": "https://careers.stryker.com",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Alexion",
+    "legal_name": "Alexion Pharma International Operations Limited",
+    "careers_url": "https://careers.astrazeneca.com",
+    "configured_sources": [
+      "eightfold"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  },
+  {
+    "company": "Gilead",
+    "legal_name": "Gilead Sciences Ireland UC",
+    "careers_url": "https://www.gilead.com/careers",
+    "configured_sources": [
+      "workday"
+    ],
+    "detected_provider": "unknown",
+    "confidence": 0,
+    "evidence": [],
+    "recommended_mapping": {}
+  }
+]

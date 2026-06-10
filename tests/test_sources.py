@@ -13,7 +13,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import search_jobs
 from models import CompanyConfig, RawJob, SourceConfig
-from sources import SourceError, _json_response, attrax_jobs, company_careers_jobs, eightfold_jobs, oracle_hcm_jobs, phenom_jobs, request_with_retries, successfactors_jobs
+from sources import (
+    SourceError,
+    _json_response,
+    attrax_jobs,
+    company_careers_jobs,
+    company_custom_jobs,
+    eightfold_jobs,
+    icims_jobs,
+    jobvite_jobs,
+    oracle_hcm_jobs,
+    phenom_jobs,
+    pinpoint_jobs,
+    recruitee_jobs,
+    request_with_retries,
+    successfactors_jobs,
+    taleo_jobs,
+)
 
 
 class FakeResponse:
@@ -155,7 +171,7 @@ def test_successfactors_parser_captures_ireland_support_role() -> None:
     company = CompanyConfig("SAP Ireland Limited", "SAP", ["SAP"], sources=[SourceConfig("successfactors", endpoint="https://jobs.sap.com/search/")])
     jobs = successfactors_jobs(session, company, company.sources[0])
     assert jobs[0].title == "Senior Technical Support Engineer"
-    assert jobs[0].location == "Dublin"
+    assert jobs[0].location == "Ireland / Dublin"
     assert jobs[0].url == "https://jobs.sap.com/job/Dublin-24-Senior-Technical-Support-Engineer-D24WA02/1285411901/"
 
 
@@ -171,7 +187,7 @@ def test_generic_company_careers_derives_title_from_job_slug_when_link_text_is_g
     company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("company_careers", endpoint="https://example.com/careers")])
     jobs = company_careers_jobs(session, company, company.sources[0])
     assert jobs[0].title == "Quality Engineer"
-    assert jobs[0].location == "Sligo"
+    assert jobs[0].location == "Ireland / Sligo"
 
 
 def test_phenom_parser_captures_ireland_quality_role() -> None:
@@ -238,4 +254,104 @@ def test_eightfold_parser_uses_generic_job_card_extraction() -> None:
     company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("eightfold", endpoint="https://example.eightfold.ai/careers")])
     jobs = eightfold_jobs(session, company, company.sources[0])
     assert jobs[0].title == "Technical Support Engineer"
-    assert jobs[0].location == "Dublin"
+    assert jobs[0].location == "Ireland / Dublin"
+
+
+def test_icims_parser_captures_json_jobs() -> None:
+    payload = {
+        "jobs": [
+            {
+                "title": "QA Automation Engineer",
+                "location": "Dublin, Ireland",
+                "url": "https://example.icims.com/jobs/1/qa-automation-engineer",
+                "description": "Selenium and API testing.",
+                "department": "Engineering",
+            }
+        ]
+    }
+    session = FakeSession([FakeResponse(200, payload=payload, url="https://example.icims.com/jobs/search?searchKeyword=qa")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("icims", endpoint="https://example.icims.com/jobs/search")])
+    jobs = icims_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "QA Automation Engineer"
+    assert jobs[0].location == "Dublin, Ireland"
+
+
+def test_jobvite_parser_captures_html_jobs() -> None:
+    html = """
+    <div class="jv-job-list">
+      <a href="/logitech/job/o1">Performance Test Engineer</a>
+      <span>Dublin, Ireland</span>
+    </div>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://jobs.jobvite.com/example?q=performance")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("jobvite", endpoint="https://jobs.jobvite.com/example")])
+    jobs = jobvite_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Performance Test Engineer"
+    assert jobs[0].location == "Ireland / Dublin"
+
+
+def test_taleo_parser_captures_html_jobs() -> None:
+    html = """
+    <li>
+      <a href="/careersection/jobdetail.ftl?job=123">Application Support Engineer</a>
+      <span>Dublin / Remote</span>
+    </li>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://example.taleo.net/careersection/ex/jobsearch.ftl?keyword=support")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("taleo", endpoint="https://example.taleo.net/careersection/ex/jobsearch.ftl")])
+    jobs = taleo_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Application Support Engineer"
+    assert jobs[0].location == "Ireland / Dublin"
+
+
+def test_recruitee_parser_captures_json_jobs() -> None:
+    payload = {
+        "offers": [
+            {
+                "title": "Validation Engineer",
+                "locations": [{"name": "Galway, Ireland"}],
+                "careers_url": "https://example.recruitee.com/o/validation-engineer",
+                "description": "<p>Computer system validation.</p>",
+                "department": "Quality",
+            }
+        ]
+    }
+    session = FakeSession([FakeResponse(200, payload=payload, url="https://example.recruitee.com/api/offers/")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("recruitee", endpoint="https://example.recruitee.com/api/offers/")])
+    jobs = recruitee_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Validation Engineer"
+    assert jobs[0].location == "Galway, Ireland"
+
+
+def test_pinpoint_parser_captures_html_jobs() -> None:
+    html = """
+    <article>
+      <h3>Software Test Engineer</h3>
+      <p>Cork, Ireland</p>
+      <a href="/jobs/software-test-engineer">View job</a>
+    </article>
+    """
+    session = FakeSession([FakeResponse(200, text=html, url="https://example.pinpointhq.com/jobs")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("pinpoint", endpoint="https://example.pinpointhq.com/jobs")])
+    jobs = pinpoint_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Software Test Engineer"
+    assert jobs[0].location == "Ireland / Cork"
+
+
+def test_company_custom_parser_captures_public_json_jobs() -> None:
+    payload = {
+        "results": [
+            {
+                "jobTitle": "Technical Support Engineer",
+                "location": {"name": "Dublin, Ireland"},
+                "applyUrl": "/jobs/technical-support-engineer",
+                "description": "Application support and incident management.",
+                "employmentType": "Full-time",
+            }
+        ]
+    }
+    session = FakeSession([FakeResponse(200, payload=payload, text='{"results":[]}', url="https://careers.example.com/jobs?q=support")])
+    company = CompanyConfig("Example Limited", "Example", ["Example"], sources=[SourceConfig("company_custom", endpoint="https://careers.example.com/jobs")])
+    jobs = company_custom_jobs(session, company, company.sources[0])
+    assert jobs[0].title == "Technical Support Engineer"
+    assert jobs[0].url == "https://careers.example.com/jobs/technical-support-engineer"

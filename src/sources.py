@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import logging
+import os
 import re
 import time
 from html import unescape
@@ -10,6 +11,7 @@ from urllib.parse import parse_qs, quote_plus, unquote, urlparse
 import requests
 from bs4 import BeautifulSoup
 
+from location_utils import normalize_ireland_location
 from models import CompanyConfig, RawJob, SearchFailure, SourceConfig
 
 
@@ -94,6 +96,18 @@ def fetch_jobs(session: requests.Session, company: CompanyConfig, source: Source
         return oracle_hcm_jobs(session, company, source)
     if source.source_type == "eightfold":
         return eightfold_jobs(session, company, source)
+    if source.source_type == "icims":
+        return icims_jobs(session, company, source)
+    if source.source_type == "jobvite":
+        return jobvite_jobs(session, company, source)
+    if source.source_type == "taleo":
+        return taleo_jobs(session, company, source)
+    if source.source_type == "recruitee":
+        return recruitee_jobs(session, company, source)
+    if source.source_type == "pinpoint":
+        return pinpoint_jobs(session, company, source)
+    if source.source_type == "company_custom":
+        return company_custom_jobs(session, company, source)
     if source.source_type == "fallback_search":
         return fallback_search_jobs(session, company, source)
     raise SourceError(f"Unsupported source type: {source.source_type}")
@@ -130,11 +144,27 @@ def source_endpoint(source: SourceConfig) -> str:
         return source.endpoint or f"https://{source.host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions"
     if source.source_type == "eightfold":
         return source.endpoint
+    if source.source_type == "icims":
+        return source.endpoint or f"https://{source.slug}.icims.com/jobs/search"
+    if source.source_type == "jobvite":
+        return source.endpoint or f"https://jobs.jobvite.com/{source.slug}"
+    if source.source_type == "taleo":
+        return source.endpoint
+    if source.source_type == "recruitee":
+        return source.endpoint or f"https://{source.slug}.recruitee.com/api/offers/"
+    if source.source_type == "pinpoint":
+        return source.endpoint or f"https://{source.slug}.pinpointhq.com/jobs"
+    if source.source_type == "company_custom":
+        return source.endpoint
     return source.source_type
 
 
 def source_quality(source_type: str) -> str:
-    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio", "attrax", "successfactors", "phenom", "oracle_hcm", "eightfold"}:
+    if source_type == "company_custom":
+        return "custom_public_page"
+    if source_type == "eightfold":
+        return "limited_public_page"
+    if source_type in {"greenhouse", "lever", "ashby", "smartrecruiters", "workday", "amazon_jobs", "teamtailor", "bamboohr", "personio", "attrax", "successfactors", "phenom", "oracle_hcm", "icims", "jobvite", "taleo", "recruitee", "pinpoint"}:
         return "direct_api" if source_type in {"workday", "amazon_jobs"} else "job_board_api"
     if source_type == "company_careers":
         return "direct_career_page"
@@ -176,6 +206,13 @@ def request_with_retries(session: requests.Session, method: str, url: str, **kwa
         last_error.retry_count = retries
         raise last_error
     raise SourceError(f"api_failure: request failed for endpoint {url}", None, "api_failure", retries)
+
+
+def search_terms() -> list[str]:
+    keyword = os.getenv("SEARCH_KEYWORD", "").strip()
+    if keyword:
+        return list(dict.fromkeys([keyword, *SEARCH_TERMS]))
+    return SEARCH_TERMS
 
 
 def greenhouse_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
@@ -278,7 +315,7 @@ def workday_jobs(session: requests.Session, company: CompanyConfig, source: Sour
     jobs: list[RawJob] = []
     headers = {"Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Mozilla/5.0"}
     limit = 20
-    for term in SEARCH_TERMS:
+    for term in search_terms():
         offset = 0
         while True:
             response = request_with_retries(
@@ -411,7 +448,7 @@ def personio_jobs(session: requests.Session, company: CompanyConfig, source: Sou
 def attrax_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     base_endpoint = source_endpoint(source)
     jobs: list[RawJob] = []
-    for term in SEARCH_TERMS:
+    for term in search_terms():
         response = request_with_retries(session, "GET", base_endpoint, params={"q": term}, timeout=30)
         endpoint = response.url if getattr(response, "url", "") else f"{base_endpoint}?q={quote_plus(term)}"
         _raise_for_status(response, endpoint)
@@ -455,7 +492,7 @@ def attrax_jobs(session: requests.Session, company: CompanyConfig, source: Sourc
 def successfactors_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     base_endpoint = source_endpoint(source)
     jobs: list[RawJob] = []
-    for term in SEARCH_TERMS:
+    for term in search_terms():
         response = request_with_retries(
             session,
             "GET",
@@ -496,7 +533,7 @@ def successfactors_jobs(session: requests.Session, company: CompanyConfig, sourc
 def phenom_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
     endpoint = source_endpoint(source)
     jobs: list[RawJob] = []
-    for term in SEARCH_TERMS:
+    for term in search_terms():
         payload = {
             "ddoKey": "refineSearch",
             "jobs": True,
@@ -541,7 +578,7 @@ def oracle_hcm_jobs(session: requests.Session, company: CompanyConfig, source: S
     endpoint = source_endpoint(source)
     jobs: list[RawJob] = []
     expand = "requisitionList.workLocation,requisitionList.otherWorkLocations,requisitionList.secondaryLocations,flexFieldsFacet.values,requisitionList.requisitionFlexFields"
-    for term in SEARCH_TERMS:
+    for term in search_terms():
         finder = f"findReqs;siteNumber={source.site},keyword={term},location=Ireland,limit=25,offset=0,sortBy=RELEVANCY"
         response = request_with_retries(
             session,
@@ -580,6 +617,111 @@ def eightfold_jobs(session: requests.Session, company: CompanyConfig, source: So
     response = request_with_retries(session, "GET", endpoint, timeout=30)
     _raise_for_status(response, endpoint)
     return _parse_generic_html_jobs(company, source, endpoint, response.text, "Eightfold Careers")
+
+
+def icims_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    jobs: list[RawJob] = []
+    for term in search_terms():
+        response = request_with_retries(session, "GET", endpoint, params={"searchKeyword": term, "searchLocation": "Ireland"}, timeout=30)
+        _raise_for_status(response, response.url if getattr(response, "url", "") else endpoint)
+        try:
+            data = _json_response(response, endpoint)
+        except SourceError:
+            jobs.extend(_parse_generic_html_jobs(company, source, endpoint, response.text, "iCIMS Careers"))
+            continue
+        postings = data.get("jobs", data.get("items", data)) if isinstance(data, dict) else data
+        for job in postings if isinstance(postings, list) else []:
+            jobs.append(
+                RawJob(
+                    company=company.brand_name,
+                    title=job.get("title", "") or job.get("jobTitle", ""),
+                    location=job.get("location", "") or job.get("city", ""),
+                    url=job.get("url", "") or job.get("applyUrl", "") or endpoint,
+                    source="iCIMS Careers",
+                    endpoint=endpoint,
+                    snippet=job.get("description", "") or job.get("overview", ""),
+                    category=job.get("department", "") or job.get("category", ""),
+                    source_type=source.source_type,
+                    source_quality=source_quality(source.source_type),
+                )
+            )
+        time.sleep(0.2)
+    return _dedupe_raw(jobs)
+
+
+def jobvite_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    jobs: list[RawJob] = []
+    for term in search_terms():
+        response = request_with_retries(session, "GET", endpoint, params={"q": term}, timeout=30)
+        _raise_for_status(response, response.url if getattr(response, "url", "") else endpoint)
+        jobs.extend(_parse_generic_html_jobs(company, source, endpoint, response.text, "Jobvite Careers"))
+        time.sleep(0.2)
+    return _dedupe_raw(jobs)
+
+
+def taleo_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    jobs: list[RawJob] = []
+    for term in search_terms():
+        response = request_with_retries(session, "GET", endpoint, params={"keyword": term, "location": "Ireland"}, timeout=30)
+        _raise_for_status(response, response.url if getattr(response, "url", "") else endpoint)
+        jobs.extend(_parse_generic_html_jobs(company, source, endpoint, response.text, "Taleo Careers"))
+        time.sleep(0.2)
+    return _dedupe_raw(jobs)
+
+
+def recruitee_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
+    _raise_for_status(response, endpoint)
+    try:
+        data = _json_response(response, endpoint)
+    except SourceError:
+        return _parse_generic_html_jobs(company, source, endpoint, response.text, "Recruitee Careers")
+    postings = data.get("offers", data.get("jobs", data)) if isinstance(data, dict) else data
+    jobs = []
+    for job in postings if isinstance(postings, list) else []:
+        locations = job.get("locations", [])
+        location = ", ".join(item.get("name", "") for item in locations if isinstance(item, dict)) if isinstance(locations, list) else str(locations or "")
+        jobs.append(
+            RawJob(
+                company=company.brand_name,
+                title=job.get("title", ""),
+                location=location,
+                url=job.get("careers_url", "") or job.get("url", "") or endpoint,
+                source="Recruitee Careers",
+                endpoint=endpoint,
+                snippet=_html_to_text(job.get("description", "")),
+                category=job.get("department", ""),
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
+            )
+        )
+    return _dedupe_raw(jobs)
+
+
+def pinpoint_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    response = request_with_retries(session, "GET", endpoint, timeout=30)
+    _raise_for_status(response, endpoint)
+    return _parse_generic_html_jobs(company, source, endpoint, response.text, "Pinpoint Careers")
+
+
+def company_custom_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
+    endpoint = source_endpoint(source)
+    jobs: list[RawJob] = []
+    for term in search_terms():
+        response = request_with_retries(session, "GET", endpoint, params={"q": term, "keyword": term, "location": "Ireland"}, timeout=30)
+        _raise_for_status(response, response.url if getattr(response, "url", "") else endpoint)
+        try:
+            data = _json_response(response, endpoint)
+            jobs.extend(_generic_json_jobs(company, source, response.url if getattr(response, "url", "") else endpoint, data, "Company Custom Careers"))
+        except SourceError:
+            jobs.extend(_parse_generic_html_jobs(company, source, endpoint, response.text, "Company Custom Careers"))
+        time.sleep(0.2)
+    return _dedupe_raw(jobs)
 
 
 def fallback_search_jobs(session: requests.Session, company: CompanyConfig, source: SourceConfig) -> list[RawJob]:
@@ -674,6 +816,85 @@ def _parse_generic_html_jobs(company: CompanyConfig, source: SourceConfig, endpo
     return _dedupe_raw(jobs)
 
 
+def _generic_json_jobs(company: CompanyConfig, source: SourceConfig, endpoint: str, data: object, source_name: str) -> list[RawJob]:
+    jobs = []
+    for item in _walk_job_like_dicts(data):
+        title = _first_value(item, ["title", "jobTitle", "name", "postingTitle"])
+        if not title:
+            continue
+        location = _first_location_value(item)
+        url = _first_value(item, ["url", "jobUrl", "applyUrl", "absolute_url", "externalPath", "hostedUrl"])
+        if url and url.startswith("/"):
+            url = requests.compat.urljoin(endpoint, url)
+        snippet = _first_value(item, ["description", "descriptionPlain", "descriptionTeaser", "summary", "overview"])
+        category = _first_value(item, ["category", "department", "team", "jobFunction"])
+        work_type = _first_value(item, ["workType", "workplaceType", "employmentType", "commitment", "type"])
+        jobs.append(
+            RawJob(
+                company=company.brand_name,
+                title=_clean_text(title),
+                location=_clean_text(location),
+                url=url or endpoint,
+                source=source_name,
+                endpoint=endpoint,
+                snippet=_html_to_text(snippet),
+                work_type=_clean_text(work_type),
+                category=_clean_text(category),
+                source_type=source.source_type,
+                source_quality=source_quality(source.source_type),
+            )
+        )
+    return _dedupe_raw(jobs)
+
+
+def _walk_job_like_dicts(data: object) -> list[dict]:
+    found: list[dict] = []
+    if isinstance(data, list):
+        for item in data:
+            found.extend(_walk_job_like_dicts(item))
+    elif isinstance(data, dict):
+        if any(key in data for key in ["title", "jobTitle", "postingTitle"]) and any(key in data for key in ["url", "jobUrl", "applyUrl", "absolute_url", "externalPath", "hostedUrl", "location", "locations"]):
+            found.append(data)
+        for value in data.values():
+            if isinstance(value, (dict, list)):
+                found.extend(_walk_job_like_dicts(value))
+    return found
+
+
+def _first_value(item: dict, keys: list[str]) -> str:
+    for key in keys:
+        value = item.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+        if isinstance(value, dict):
+            nested = _first_value(value, ["name", "label", "title", "text"])
+            if nested:
+                return nested
+    return ""
+
+
+def _first_location_value(item: dict) -> str:
+    for key in ["location", "locations", "city", "country", "primaryLocation", "locationsText"]:
+        value = item.get(key)
+        if isinstance(value, str) and value.strip():
+            return value
+        if isinstance(value, dict):
+            nested = _first_value(value, ["name", "label", "city", "country", "text"])
+            if nested:
+                return nested
+        if isinstance(value, list):
+            parts = []
+            for part in value:
+                if isinstance(part, str):
+                    parts.append(part)
+                elif isinstance(part, dict):
+                    parts.append(_first_value(part, ["name", "label", "city", "country", "text"]))
+            joined = ", ".join(_clean_text(part) for part in parts if _clean_text(part))
+            if joined:
+                return joined
+    return ""
+
+
 def _ashby_location(job: dict) -> str:
     parts = [job.get("location", "")]
     address = ((job.get("address") or {}).get("postalAddress") or {})
@@ -749,6 +970,9 @@ def _clean_bing_url(url: str) -> str:
 
 
 def _extract_location(text: str) -> str:
+    normalized = normalize_ireland_location(text)
+    if normalized:
+        return normalized
     lower = text.lower()
     for term in [
         "dublin",

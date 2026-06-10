@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "title": "Senior Test Automation Engineer",
+    "company": "Cubic Telecom",
+    "location": "Dublin, Dublin, Ireland",
+    "url": "https://jobs.ashbyhq.com/cubic3/ee1639b2-a109-4c03-a087-fb2a4475b8c4",
+    "matching_keyword": "test automation engineer",
+    "source": "Ashby",
+    "date_found": "2026-06-10",
+    "category": "Apply First - Best QA/Test Matches",
+    "work_type": "FullTime / Hybrid",
+    "score": 41,
+    "accepted_reason": "score=41; broad QA/Test/Quality title override",
+    "source_type": "ashby",
+    "source_quality": "job_board_api",
+    "unique_id": "f4225c3c8fa387a982f719323b4f90dd6427a8defd48961f5ce8eb4a6db6753d"
+  },
+  {
+    "title": "Test Support Engineer (Maternity Cover) ",
+    "company": "Cubic Telecom",
+    "location": "Dublin, Dublin, Ireland",
+    "url": "https://jobs.ashbyhq.com/cubic3/42e3fe54-8880-42a3-8975-e92137df08d6",
+    "matching_keyword": "support engineer",
+    "source": "Ashby",
+    "date_found": "2026-06-10",
+    "category": "Production/Application Support Roles",
+    "work_type": "Temporary / Remote",
+    "score": 55,
+    "accepted_reason": "score=55; broad QA/Test/Quality title override",
+    "source_type": "ashby",
+    "source_quality": "job_board_api",
+    "unique_id": "3b2d6b72692b7f9190403696d919d3f7dc2041c9598d4d61c7b94d7a89a5a3ae"
+  },
+  {
+    "title": "Test Automation Engineer",
+    "company": "Cubic Telecom",
+    "location": "Dublin, Dublin, Ireland",
+    "url": "https://jobs.ashbyhq.com/cubic3/fad0562e-7e0b-4e2d-b0e2-6b502613a0a4",
+    "matching_keyword": "test automation engineer",
+    "source": "Ashby",
+    "date_found": "2026-06-10",
+    "category": "Apply First - Best QA/Test Matches",
+    "work_type": "FullTime / Hybrid",
+    "score": 41,
+    "accepted_reason": "score=41; broad QA/Test/Quality title override",
+    "source_type": "ashby",
+    "source_quality": "job_board_api",
+    "unique_id": "a5385e7081f7e2ad779a9d47c71bc36ca2e9b62050fc115ae96d5281d96da85b"
+  }
+]

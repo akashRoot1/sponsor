@@ -75,6 +75,7 @@ def _run_source(
         endpoint=endpoint,
         source_quality=source_quality(source.source_type),
         fallback_used=fallback_used,
+        last_checked_timestamp=generated_at.isoformat(),
     )
     try:
         raw_jobs = fetch_jobs(session, company, source)
@@ -93,6 +94,10 @@ def _run_source(
             stats.rejected_jobs,
             fallback_used,
         )
+        if source.source_type == "eightfold" and stats.raw_jobs_found == 0:
+            stats.status = "limited_extraction"
+        else:
+            stats.status = "success"
     except SourceError as exc:
         _mark_source_failure(stats, exc.error_type, str(exc), exc.retry_count)
         report.failures.append(_failure(company, source, str(exc), generated_at, exc.http_status, exc.error_type, exc.retry_count))
@@ -159,6 +164,11 @@ def _mark_source_failure(stats: SourceStats, error_type: str, error: str, retrie
     stats.error = error
     stats.error_type = error_type
     stats.retries_performed = retries
+    stats.status = "failed"
+    if "403" in error or error_type == "blocked_by_site":
+        stats.status = "blocked"
+    elif "404" in error or error_type == "invalid_source_url":
+        stats.status = "invalid_url"
     if error_type in {"timeout_failure", "network_failure"}:
         stats.timeout_failures = 1
     elif error_type == "parsing_failure":

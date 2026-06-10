@@ -14,8 +14,8 @@ The search now prioritizes direct public company sources instead of DuckDuckGo o
 - SmartRecruiters public API
 - Workday CXS API where reliable
 - Amazon Jobs API
-- Teamtailor, BambooHR, Personio, Attrax, Phenom, SuccessFactors, Oracle HCM, and Eightfold public job boards where configured
-- Simple public company careers pages
+- Teamtailor, BambooHR, iCIMS, Jobvite, Taleo, Personio, Recruitee, Pinpoint, Attrax, Phenom, SuccessFactors, Oracle HCM, and Eightfold public job boards where configured
+- Custom public company careers pages, tracked as weaker `company_custom` mappings
 - Search fallback only when a direct source is unavailable
 
 Direct APIs are better than DuckDuckGo/Bing because they return actual job records with titles, URLs, locations, and work types. Search engines often return homepages, login pages, Wikipedia, support pages, app stores, or HTTP challenge pages.
@@ -56,6 +56,9 @@ Open the repository on GitHub:
 | `send_email` | Sends or skips the email |
 | `update_seen` | Updates `data/seen_jobs.json` only after a successful email |
 | `max_companies` | Optional number of companies to search |
+| `company` | Optional company or alias filter, for example `Cubic`, `AbbVie`, `Microsoft` |
+| `provider` | Optional source provider filter, for example `workday`, `phenom`, `company_custom` |
+| `keyword` | Optional extra search keyword, for example `validation`, `support`, `Playwright` |
 
 To test Cubic specifically, run with:
 
@@ -66,7 +69,14 @@ To test Cubic specifically, run with:
 
 Cubic is first in the priority list.
 
-To test one non-priority company, set `test_mode=false`, `send_email=false`, `update_seen=false`, and set `max_companies` to the number of companies from the top of `src/companies.py` that you want to include.
+To test one company directly, set:
+
+- `test_mode=false`
+- `send_email=false` or `true`
+- `update_seen=false`
+- `company=AbbVie` or `company=Cubic`
+
+To test a provider family, set `provider=phenom`, `provider=workday`, or another source type. To force an extra search phrase into provider queries, set `keyword=validation`, `keyword=support`, or another role/tool keyword.
 
 ## Email Setup
 
@@ -98,8 +108,13 @@ Every run uploads `job-search-debug-results` with:
 | `data/search_failures.json` | Failed sources with source type, endpoint, error, and HTTP status |
 | `data/duplicates_removed.json` | Accepted-looking duplicate jobs removed before email |
 | `data/source_health.json` | Per-company source health, raw counts, accepted/rejected counts, retry counts, failure type, and fallback usage |
+| `data/missing_source_mappings.json` | Companies still using weak custom/fallback mappings, with recommended next action |
+| `data/provider_detection_results.json` | Provider detection output for configured career URLs |
+| `data/known_missed_jobs_check.json` | Regression check for known previously missed roles such as Cubic Test Support and AbbVie Quality Engineer |
+| `reports/source_coverage.json` | Provider/source coverage dashboard data |
+| `reports/provider_audit.md` | Human-readable provider audit report |
 
-Use these artifacts to inspect why a role was accepted or rejected.
+Use these artifacts to inspect why a role was accepted or rejected, whether a source failed, and which companies still need stronger provider-specific mappings.
 
 ## Filtering
 
@@ -207,7 +222,7 @@ company(
 )
 ```
 
-Supported source types are implemented in `src/sources.py`.
+Supported source types are implemented in `src/sources.py`. Current source types include `greenhouse`, `lever`, `ashby`, `smartrecruiters`, `workday`, `amazon_jobs`, `teamtailor`, `bamboohr`, `personio`, `attrax`, `successfactors`, `phenom`, `oracle_hcm`, `eightfold`, `icims`, `jobvite`, `taleo`, `recruitee`, `pinpoint`, `company_custom`, `company_careers`, and `fallback_search`.
 
 Examples of stronger direct sources now configured:
 
@@ -215,15 +230,30 @@ Examples of stronger direct sources now configured:
 - SAP and Boston Scientific use `successfactors`, which captures server-rendered job result rows.
 - Fiserv, Eli Lilly, and MSD use `phenom`, which queries the public `/widgets` job endpoint instead of scraping a JavaScript landing page.
 - JPMorgan Chase and Oracle use `oracle_hcm`, which queries Oracle Candidate Experience requisition APIs.
-- PayPal, Citi, BNY, Medtronic, and AstraZeneca/Alexion are marked as `eightfold`; these sites can restrict public API access, so the parser uses public page extraction where possible.
+- PayPal, Citi, BNY, Microsoft, Medtronic, and AstraZeneca/Alexion are marked as `eightfold`; these sites can restrict public API access, so the parser uses public page extraction where possible.
+- Zendesk is mapped to Workday.
+- NTT DATA is mapped to Phenom.
+- Optum is mapped to Taleo.
+- Logitech is mapped to Jobvite.
 
-The current provider audit lives in `reports/provider_audit.md`. It lists the companies converted away from generic scraping and every company entry that still uses `company_careers`.
+The current provider audit lives in `reports/provider_audit.md`. It shows provider counts, source health, and remaining weak mappings. `company_careers` should stay below 20 and is currently expected to be zero; `company_custom` entries are still weaker than provider APIs and remain listed for follow-up.
+
+## Provider Detection And Coverage
+
+`src/provider_detection.py` detects common public careers providers from career URLs or page HTML. `src/reporting.py` generates:
+
+- `reports/source_coverage.json`
+- `reports/provider_audit.md`
+- `data/missing_source_mappings.json`
+- `data/provider_detection_results.json`
+
+The audit distinguishes strong provider/API mappings from weak custom mappings. A weak mapping does not mean “no jobs”; it means the workflow could only use public page/JSON extraction and the company should be inspected later for a more stable provider endpoint.
 
 ## Add Keywords
 
 Edit `src/filters.py`.
 
-Use `STRONG_KEYWORDS`, `WEAK_KEYWORDS`, `CONTEXT_KEYWORDS`, `IRELAND_LOCATION_TERMS`, and `EXCLUDED_BUSINESS_TERMS`.
+Use `VERY_STRONG_TITLE_KEYWORDS`, `BROAD_TITLE_KEYWORDS`, `STRONG_DESCRIPTION_KEYWORDS`, `SUPPORT_ROLE_KEYWORDS`, `TOOL_KEYWORDS`, `CONTEXT_KEYWORDS`, `IRELAND_LOCATION_TERMS`, and `EXCLUDED_BUSINESS_TERMS`.
 
 ## Local Test
 
@@ -241,6 +271,20 @@ $env:TEST_MODE = "true"
 $env:SEND_EMAIL = "false"
 $env:UPDATE_SEEN = "false"
 $env:MAX_COMPANIES = "1"
+$env:COMPANY = "Cubic"
+$env:SEARCH_KEYWORD = "support"
+python src/main.py
+```
+
+To regenerate debug artifacts for AbbVie without sending email:
+
+```powershell
+$env:FORCE_RUN = "true"
+$env:TEST_MODE = "false"
+$env:SEND_EMAIL = "false"
+$env:UPDATE_SEEN = "false"
+$env:COMPANY = "AbbVie"
+$env:SEARCH_KEYWORD = "quality"
 python src/main.py
 ```
 
